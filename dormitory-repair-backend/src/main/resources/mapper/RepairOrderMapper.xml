@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.dormitoryrepair.mapper.RepairOrderMapper">
+    <select id="countGroupByCategory" resultType="java.util.HashMap">
+        SELECT category_id AS categoryId, COUNT(*) AS count
+        FROM repair_order
+        WHERE category_id IS NOT NULL
+        GROUP BY category_id
+    </select>
+    <select id="countGroupByStatus" resultType="java.util.HashMap">
+        SELECT repair_status AS status, COUNT(*) AS count
+        FROM repair_order
+        GROUP BY repair_status
+    </select>
+</mapper>

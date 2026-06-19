@@ -1,0 +1,80 @@
+# Frontend dependencies and build output
+dormitory-repair-frontend/node_modules/
+dormitory-repair-frontend/dist/
+
+# Backend build output
+dormitory-repair-backend/target/
+
+# IDE and local metadata
+.idea/
+dormitory-repair-backend/.idea/
+
+# Temporary logs and scratch files
+dormitory-repair-frontend/tmp-*.out
+dormitory-repair-frontend/tmp-*.err
+dormitory-repair-backend/tmp-*.out
+dormitory-repair-backend/tmp-*.err
+dormitory-repair-frontend/build-out.txt
+
+# OS / local artifacts
+.DS_Store
+Thumbs.db
+
+# AI agent local config
+.claude/
+.antigravitycli/
+.reasonix/
+.codegraph/
+reasonix.toml
+
+# Root-level node_modules and temp output
+node_modules/
+paper_rewriting_output/
+
+# VS Code settings
+.vscode/
+
+# Git Worktrees
+.worktrees/
+.gstack/
+
+# Environment variables (API keys, secrets)
+.env
+
+# Large binaries
+*.zip
+
+# Course submission artifacts / personal docs
+2026专业实践II学生材料/
+软件工程/
+课程设计报告*
+程序运行说明书模板*
+web高级-课程设计报告*
+Web后端/
+Web后端高级/
+.alma-snapshots
+dormitory-repair/
+
+# Internal design docs
+DESIGN-claude.md
+DESIGN-mastercard.md
+DESIGN-pinterest.md
+
+# Historical plans / superpowers
+docs/superpowers/
+
+# Diagram HTML exports
+docs/图*.html
+
+# Temp scripts and refactor helpers
+dormitory-repair-frontend/scripts/
+dormitory-repair-frontend/refactor_admin.cjs
+tools/
+start-backend.ps1
+package.json
+package-lock.json
+
+# Deprecated Mc* components
+dormitory-repair-frontend/src/components/mc/
+
+.superpowers/

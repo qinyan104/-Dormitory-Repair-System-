@@ -1,0 +1,10 @@
+-- V2: AI 自动化升级字段
+ALTER TABLE repair_order
+    ADD COLUMN IF NOT EXISTS priority_score INT DEFAULT 5 COMMENT 'AI优先级分数 1-10',
+    ADD COLUMN IF NOT EXISTS impact_scope INT DEFAULT 3 COMMENT 'AI影响范围 1-10',
+    ADD COLUMN IF NOT EXISTS risk_score INT DEFAULT 0 COMMENT 'AI验收风险分 0-100',
+    ADD COLUMN IF NOT EXISTS needs_review TINYINT DEFAULT 0 COMMENT '是否需要管理员复查',
+    ADD COLUMN IF NOT EXISTS review_type VARCHAR(32) DEFAULT NULL COMMENT '验收方式: AUTO_ACCEPT/STUDENT_CONFIRM/ADMIN_REVIEW';
+
+ALTER TABLE repair_order
+    ADD INDEX IF NOT EXISTS idx_priority (priority_score DESC, submit_time ASC);

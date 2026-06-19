@@ -1,0 +1,60 @@
+
+services:
+  # 数据库服务
+  db:
+    image: mysql:8.0
+    container_name: repair-db
+    restart: always
+    environment:
+      MYSQL_DATABASE: dormitory_repair
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      # 自动执行初始化 SQL 脚本
+      - ./sql/dormitory_repair_init.sql:/docker-entrypoint-initdb.d/00_dormitory_repair_init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: repair-redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # 后端服务
+  backend:
+    build: ./dormitory-repair-backend
+    container_name: repair-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/dormitory_repair?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATA_REDIS_HOST=redis
+      - JWT_SECRET=dormitory-repair-jwt-secret-key-please-change-it-in-production
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+    ports:
+      - "8080:8080"
+    volumes:
+      # 持久化上传的图片等文件
+      - ./uploads:/app/uploads
+
+  # 前端服务
+  frontend:
+    build: ./dormitory-repair-frontend
+    container_name: repair-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
