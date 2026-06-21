@@ -113,8 +113,8 @@ public class RepairOrderController {
         Long userId = AuthContext.getUserId();
         LambdaQueryWrapper<RepairOrder> wrapper = buildWrapper(request)
                 .eq(RepairOrder::getUserId, userId)
-                .orderByDesc(RepairOrder::getPriorityScore)
-                .orderByAsc(RepairOrder::getSubmitTime);
+                .orderByDesc(RepairOrder::getId)
+                .orderByDesc(RepairOrder::getSubmitTime);
         IPage<RepairOrder> result = repairOrderService.page(
                 new Page<>(request.getPageNum(), request.getPageSize()), wrapper);
         Map<String, Object> data = new HashMap<>();
@@ -175,8 +175,8 @@ public class RepairOrderController {
     public ApiResponse<Map<String, Object>> page(RepairOrderQueryRequest request) {
         ensureAdmin();
         LambdaQueryWrapper<RepairOrder> wrapper = buildWrapper(request)
-                .orderByDesc(RepairOrder::getPriorityScore)
-                .orderByAsc(RepairOrder::getSubmitTime);
+                .orderByDesc(RepairOrder::getId)
+                .orderByDesc(RepairOrder::getSubmitTime);
         IPage<RepairOrder> result = repairOrderService.page(
                 new Page<>(request.getPageNum(), request.getPageSize()), wrapper);
         Map<String, Object> data = new HashMap<>();
@@ -369,8 +369,8 @@ public class RepairOrderController {
         Long workerId = AuthContext.getUserId();
         LambdaQueryWrapper<RepairOrder> wrapper = buildWrapper(request)
                 .eq(RepairOrder::getWorkerId, workerId)
-                .orderByDesc(RepairOrder::getPriorityScore)
-                .orderByAsc(RepairOrder::getSubmitTime);
+                .orderByDesc(RepairOrder::getId)
+                .orderByDesc(RepairOrder::getSubmitTime);
         IPage<RepairOrder> result = repairOrderService.page(
                 new Page<>(request.getPageNum(), request.getPageSize()), wrapper);
         Map<String, Object> data = new HashMap<>();

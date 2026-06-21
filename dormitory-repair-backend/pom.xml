@@ -23,6 +23,9 @@
         <maven.compiler.target>17</maven.compiler.target>
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <jjwt.version>0.11.5</jjwt.version>
+        <mockito.version>5.16.0</mockito.version>
+        <byte-buddy.version>1.17.5</byte-buddy.version>
+        <lombok.version>1.18.40</lombok.version>
     </properties>
 
     <dependencies>
@@ -69,7 +72,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.36</version>
+            <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -109,7 +112,7 @@
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>1.18.36</version>
+                            <version>${lombok.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

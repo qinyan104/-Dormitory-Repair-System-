@@ -25,7 +25,7 @@
 
 在开始部署前，请确保您的电脑已安装以下环境：
 
-*   **Java**: JDK 17 (必须，推荐配置 `JAVA_HOME`)
+*   **Java**: JDK 17 或 JDK 25 (推荐配置 `JAVA_HOME`)
 *   **Maven**: 3.6+
 *   **Node.js**: 18+ (建议 20.x)
 *   **MySQL**: 8.0+
@@ -52,7 +52,7 @@ docker compose up -d --build
 
 ### 后端启动
 1. 使用 IntelliJ IDEA 打开 `dormitory-repair-backend`。
-2. 确保 JDK 版本为 17。
+2. 确保 JDK 版本为 17 或 25。
 3. 配置 DeepSeek API Key（用于AI功能）：在 `.env` 文件填入 `DEEPSEEK_API_KEY=sk-你的key`，或用 `$env:DEEPSEEK_API_KEY="sk-你的key"` 设置环境变量。
 4. 运行 `DormitoryRepairApplication.java`。
 
@@ -87,6 +87,6 @@ docker compose up -d --build
 
 ## 常见问题排查 
 
-1.  **后端编译报错**: 请务必使用 **JDK 17**。JDK 21+ 可能会导致 Lombok 冲突。
+1.  **后端编译**: 本项目已完全适配 JDK 17 和 JDK 25。如果在 JDK 25 环境下运行编译，项目已升级 Lombok (1.18.40) 和 Mockito (5.16.0) 以避免反射冲突。
 2.  **验证码无法显示**: 检查 Redis 容器是否正常运行。
 3.  **前端打包**: 运行 `npm run build` 验证 TypeScript 类型与生产构建。
