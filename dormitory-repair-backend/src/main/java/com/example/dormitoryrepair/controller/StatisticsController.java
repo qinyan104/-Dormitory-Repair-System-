@@ -96,6 +96,49 @@ public class StatisticsController {
         return ApiResponse.success(result);
     }
 
+    @GetMapping("/worker-summary")
+    public ApiResponse<Map<String, Object>> workerSummary() {
+        if (!"REPAIRER".equals(AuthContext.getRole())) {
+            throw new BusinessException(ResultCode.FORBIDDEN);
+        }
+        Long workerId = AuthContext.getUserId();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("assigned", repairOrderService.count(new LambdaQueryWrapper<RepairOrder>()
+                .eq(RepairOrder::getWorkerId, workerId)
+                .eq(RepairOrder::getRepairStatus, 2)));
+        result.put("repairing", repairOrderService.count(new LambdaQueryWrapper<RepairOrder>()
+                .eq(RepairOrder::getWorkerId, workerId)
+                .eq(RepairOrder::getRepairStatus, 3)));
+        result.put("waitingConfirm", repairOrderService.count(new LambdaQueryWrapper<RepairOrder>()
+                .eq(RepairOrder::getWorkerId, workerId)
+                .eq(RepairOrder::getRepairStatus, 4)));
+        result.put("completedToday", repairOrderService.count(new LambdaQueryWrapper<RepairOrder>()
+                .eq(RepairOrder::getWorkerId, workerId)
+                .eq(RepairOrder::getRepairStatus, 5)
+                .ge(RepairOrder::getStudentConfirmTime, LocalDate.now().atStartOfDay())
+                .le(RepairOrder::getStudentConfirmTime, LocalDate.now().atTime(23, 59, 59))));
+        return ApiResponse.success(result);
+    }
+
+    @GetMapping("/building")
+    public ApiResponse<List<Map<String, Object>>> building() {
+        ensureAdmin();
+        return ApiResponse.success(repairOrderMapper.countGroupByBuilding());
+    }
+
+    @GetMapping("/trend")
+    public ApiResponse<List<Map<String, Object>>> trend() {
+        ensureAdmin();
+        return ApiResponse.success(repairOrderMapper.getSevenDayTrend());
+    }
+
+    @GetMapping("/worker-ranking")
+    public ApiResponse<List<Map<String, Object>>> workerRanking() {
+        ensureAdmin();
+        return ApiResponse.success(repairOrderMapper.getWorkerPerformance());
+    }
+
     private LambdaQueryWrapper<RepairOrder> statusWrapper(int status) {
         return new LambdaQueryWrapper<RepairOrder>().eq(RepairOrder::getRepairStatus, status);
     }
