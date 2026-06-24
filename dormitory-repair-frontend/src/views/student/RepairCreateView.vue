@@ -241,38 +241,124 @@ const handleSubmit = async () => {
         <!-- 智能报修助手切换 -->
         <div class="form-section switch-section">
           <div class="mode-switch">
-            <button type="button" :class="['mode-btn', { active: repairMode === 'manual' }]" @click="repairMode = 'manual'">📝 手动填写</button>
-            <button type="button" :class="['mode-btn', { active: repairMode === 'ai' }]" @click="repairMode = 'ai'">🤖 智能报修</button>
+            <button type="button" :class="['mode-btn', { active: repairMode === 'manual' }]" @click="repairMode = 'manual'">
+              <span class="mode-icon">✏️</span>
+              手动填写
+            </button>
+            <button type="button" :class="['mode-btn', { active: repairMode === 'ai' }]" @click="repairMode = 'ai'">
+              <span class="mode-icon">✨</span>
+              智能报修
+            </button>
           </div>
         </div>
 
         <!-- 智能报修模式 -->
-        <div v-if="repairMode === 'ai'" class="form-section">
-          <label class="mc-label">一句话描述问题</label>
-          <textarea
-            v-model="naturalText"
-            class="mc-textarea"
-            placeholder="例如：3号楼502空调不制冷，晚上热得睡不着，帮我报修。"
-            rows="3"
-          ></textarea>
-          <div class="natural-actions">
-            <UiButton type="secondary" :loading="nlLoading" @click="handleNaturalRepair">🔍 AI 识别</UiButton>
-          </div>
-          <div v-if="nlError" class="ai-error" style="margin-top:8px">{{ nlError }}</div>
-          <div v-if="nlResult" class="nl-result-card">
-            <div class="ai-result-header">AI 提取结果</div>
-            <div class="nl-result-grid">
-              <div><span class="nl-label">楼栋</span><span class="nl-value">{{ nlResult.building || '未识别' }}</span></div>
-              <div><span class="nl-label">房号</span><span class="nl-value">{{ nlResult.room || '未识别' }}</span></div>
-              <div><span class="nl-label">故障类型</span><span class="nl-value">{{ nlResult.repairType || '未识别' }}</span></div>
-              <div><span class="nl-label">建议分类</span><span class="nl-value">{{ nlResult.categoryName || '未识别' }}</span></div>
-              <div><span class="nl-label">紧急程度</span><span class="nl-value">{{ nlResult.urgencyLevel || '未识别' }}</span></div>
-              <div><span class="nl-label">置信度</span><span class="nl-value">{{ (nlResult.confidence * 100).toFixed(0) }}%</span></div>
+        <div v-if="repairMode === 'ai'" class="form-section ai-mode-section">
+          <div class="ai-mode-header">
+            <div class="ai-mode-icon">🤖</div>
+            <div class="ai-mode-text">
+              <h4>智能报修助手</h4>
+              <p>只需一句话描述问题，AI 自动提取关键信息</p>
             </div>
-            <div class="nl-reason">{{ nlResult.reason }}</div>
-            <UiButton type="primary" :loading="nlSubmitting" @click="applyNaturalResult" style="width:100%;margin-top:12px">
-              ✅ 确认并提交报修
+          </div>
+          
+          <div class="ai-input-group">
+            <label class="mc-label">问题描述</label>
+            <textarea
+              v-model="naturalText"
+              class="mc-textarea ai-textarea"
+              placeholder="例如：3号楼502空调不制冷，晚上热得睡不着，帮我报修。"
+              rows="4"
+            ></textarea>
+          </div>
+          
+          <div class="ai-actions">
+            <UiButton 
+              type="primary" 
+              :loading="nlLoading" 
+              :disabled="!naturalText.trim()"
+              @click="handleNaturalRepair"
+              class="ai-analyze-btn"
+            >
+              <span class="btn-icon">🔍</span>
+              {{ nlLoading ? 'AI 分析中...' : '开始智能分析' }}
             </UiButton>
+          </div>
+          
+          <div v-if="nlError" class="ai-error-card">
+            <div class="error-icon">⚠️</div>
+            <div class="error-content">
+              <div class="error-title">分析失败</div>
+              <div class="error-message">{{ nlError }}</div>
+            </div>
+          </div>
+          
+          <div v-if="nlResult" class="ai-result-card">
+            <div class="result-header">
+              <div class="result-icon">✅</div>
+              <div class="result-title">AI 分析结果</div>
+            </div>
+            
+            <div class="result-grid">
+              <div class="result-item">
+                <span class="result-label">楼栋</span>
+                <span class="result-value" :class="{ 'not-recognized': !nlResult.building }">
+                  {{ nlResult.building || '未识别' }}
+                </span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">房号</span>
+                <span class="result-value" :class="{ 'not-recognized': !nlResult.room }">
+                  {{ nlResult.room || '未识别' }}
+                </span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">故障类型</span>
+                <span class="result-value" :class="{ 'not-recognized': !nlResult.repairType }">
+                  {{ nlResult.repairType || '未识别' }}
+                </span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">建议分类</span>
+                <span class="result-value category">{{ nlResult.categoryName || '未识别' }}</span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">紧急程度</span>
+                <span class="result-value urgency" :class="nlResult.urgencyLevel">
+                  {{ nlResult.urgencyLevel || '未识别' }}
+                </span>
+              </div>
+              <div class="result-item">
+                <span class="result-label">置信度</span>
+                <span class="result-value confidence">
+                  {{ (nlResult.confidence * 100).toFixed(0) }}%
+                </span>
+              </div>
+            </div>
+            
+            <div class="result-reason">
+              <div class="reason-label">判断依据</div>
+              <div class="reason-text">{{ nlResult.reason }}</div>
+            </div>
+            
+            <div class="result-actions">
+              <UiButton 
+                type="secondary" 
+                @click="nlResult = null"
+                class="re-analyze-btn"
+              >
+                重新分析
+              </UiButton>
+              <UiButton 
+                type="primary" 
+                :loading="nlSubmitting" 
+                @click="applyNaturalResult"
+                class="submit-btn"
+              >
+                <span class="btn-icon">📝</span>
+                确认并提交报修
+              </UiButton>
+            </div>
           </div>
         </div>
 
