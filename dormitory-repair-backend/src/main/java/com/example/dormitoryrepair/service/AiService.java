@@ -548,13 +548,25 @@ public class AiService {
                         .groupBy("category_id")
                         .having("COUNT(*) >= 3")
         );
-        List<Map<String, Object>> highFreqBuilding = repairOrderService.listMaps(
-                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<RepairOrder>()
-                        .select("u.dormitory_building as building, COUNT(*) as cnt")
-                        .ge("r.submit_time", sevenDaysAgo)
-                        .groupBy("u.dormitory_building")
-                        .having("COUNT(*) >= 5")
-        );
+        // 高发楼栋：过去7天同一楼栋报修数量（在内存中统计）
+        List<RepairOrder> recentOrders = repairOrderService.lambdaQuery()
+                .ge(RepairOrder::getSubmitTime, sevenDaysAgo)
+                .list();
+        Map<String, Long> buildingCount = new HashMap<>();
+        for (RepairOrder o : recentOrders) {
+            SysUser u = sysUserService.getById(o.getUserId());
+            String bld = u != null && u.getDormitoryBuilding() != null ? u.getDormitoryBuilding() : "未知";
+            buildingCount.merge(bld, 1L, Long::sum);
+        }
+        List<Map<String, Object>> highFreqBuilding = new ArrayList<>();
+        for (Map.Entry<String, Long> e : buildingCount.entrySet()) {
+            if (e.getValue() >= 5) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("building", e.getKey());
+                item.put("cnt", e.getValue());
+                highFreqBuilding.add(item);
+            }
+        }
 
         Map<String, Long> categoryDist = currentOrders.stream()
                 .collect(Collectors.groupingBy(o -> {

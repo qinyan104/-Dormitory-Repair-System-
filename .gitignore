@@ -78,3 +78,6 @@ package-lock.json
 dormitory-repair-frontend/src/components/mc/
 
 .superpowers/
+
+nul
+*.nul
