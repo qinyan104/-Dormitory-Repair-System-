@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宿舍报修管理系统 - 数据库E-R图</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:       #FFFFFF;   /* Pure White */
+      --color-paper-2:     #FFFFFF;   /* Pure White */
+      --color-ink:         #141413;   /* Ink Black */
+      --color-muted:       #696969;   /* Slate Gray */
+      --color-soft:        #A3A3A3;
+      --color-rule:        rgba(20,20,19,0.10);
+      --color-rule-solid:  #D1CDC7;
+      --color-accent:      #CF4500;   /* Signal Orange */
+      --color-accent-tint: rgba(207,69,0,0.08);
+      --color-link:        #3860BE;   /* Link Blue */
+      --font-sans:         'Geist', system-ui, -apple-system, sans-serif;
+      --font-serif:        'Instrument Serif', serif;
+      --font-mono:         'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .frame {
+      width: 100%;
+      max-width: 1100px;
+      background: var(--color-paper-2);
+      border: 1px solid var(--color-rule-solid);
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+    }
+
+    svg { width: 100%; display: block; background: transparent; }
+
+    /* SVG Text Styling */
+    svg text { user-select: none; }
+    svg .eyebrow-text { font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
+    svg .entity-title { font-family: var(--font-sans); font-size: 17px; font-weight: 600; }
+    svg .field-name { font-family: var(--font-mono); font-size: 13px; font-weight: 500; }
+    svg .field-type { font-family: var(--font-mono); font-size: 11.5px; }
+    svg .cardinality-text { font-family: var(--font-mono); font-size: 13.5px; font-weight: 600; }
+    svg .relation-label { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 0.08em; }
+    svg .legend-title { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; }
+    svg .legend-text { font-family: var(--font-sans); font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <svg viewBox="0 0 1020 1160" xmlns="http://www.w3.org/2000/svg">
+      <!-- Dot pattern for dotted paper background -->
+      <defs>
+        <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="0.9" fill="rgba(20,20,19,0.06)"/>
+        </pattern>
+      </defs>
+
+      <!-- Dotted background -->
+      <rect width="100%" height="100%" fill="var(--color-paper)"/>
+      <rect width="100%" height="100%" fill="url(#dots)"/>
+
+      <!-- ==================== RELATIONSHIPS ==================== -->
+      
+      <!-- 1. Category — Order (1:N, vertical) -->
+      <line x1="510" y1="312" x2="510" y2="340" stroke="var(--color-muted)" stroke-width="1.5"/>
+
+      <!-- 2. User — Order (1:N, orthogonal) -->
+      <path d="M 300,316 L 330,316 L 330,444 L 360,444" fill="none" stroke="var(--color-muted)" stroke-width="1.5"/>
+
+      <!-- 3. Order — Feedback (1:0..1, orthogonal) -->
+      <path d="M 660,416 L 690,416 L 690,292 L 720,292" fill="none" stroke="var(--color-muted)" stroke-width="1.5"/>
+
+
+      <!-- ==================== CARDINALITY LABELS ==================== -->
+
+      <!-- Category - Order Cardinality -->
+      <text class="cardinality-text" x="518" y="322" fill="var(--color-muted)">1</text>
+      <text class="cardinality-text" x="518" y="334" fill="var(--color-muted)">N</text>
+      
+      <!-- User - Order Cardinality -->
+      <text class="cardinality-text" x="312" y="310" fill="var(--color-muted)">1</text>
+      <text class="cardinality-text" x="348" y="438" fill="var(--color-muted)">N</text>
+
+      <!-- Order - Feedback Cardinality -->
+      <text class="cardinality-text" x="672" y="410" fill="var(--color-muted)">1</text>
+      <text class="cardinality-text" x="692" y="286" fill="var(--color-muted)">0..1</text>
+
+
+      <!-- ==================== RELATIONSHIP LABELS ==================== -->
+
+      <!-- Category -> Order label -->
+      <rect x="494" y="315" width="32" height="14" rx="2" fill="var(--color-paper)"/>
+      <text class="relation-label" x="510" y="325" fill="var(--color-muted)" text-anchor="middle">归属</text>
+
+      <!-- User -> Order label -->
+      <rect x="314" y="373" width="32" height="14" rx="2" fill="var(--color-paper)"/>
+      <text class="relation-label" x="330" y="383" fill="var(--color-muted)" text-anchor="middle">提交</text>
+
+      <!-- Order -> Feedback label -->
+      <rect x="674" y="347" width="32" height="14" rx="2" fill="var(--color-paper)"/>
+      <text class="relation-label" x="690" y="357" fill="var(--color-muted)" text-anchor="middle">评价</text>
+
+
+      <!-- ==================== ENTITY BLOCKS ==================== -->
+
+      <!-- Entity 1: sys_user (用户表 - 14个字段) -->
+      <rect x="40" y="100" width="260" height="468" rx="6" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="40" y="100" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="40" y1="140" x2="300" y2="140" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="56" y="118" fill="var(--color-muted)">TABLE · 用户表</text>
+      <text class="entity-title" x="56" y="132" fill="var(--color-ink)">sys_user</text>
+      <!-- Fields -->
+      <text class="field-name" x="56" y="176" fill="var(--color-ink)"># id</text>
+      <text class="field-type" x="284" y="176" fill="var(--color-muted)" text-anchor="end">BIGINT (PK)</text>
+      <text class="field-name" x="56" y="204" fill="var(--color-ink)">username</text>
+      <text class="field-type" x="284" y="204" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="56" y="232" fill="var(--color-ink)">password</text>
+      <text class="field-type" x="284" y="232" fill="var(--color-muted)" text-anchor="end">VARCHAR(100)</text>
+      <text class="field-name" x="56" y="260" fill="var(--color-ink)">real_name</text>
+      <text class="field-type" x="284" y="260" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="56" y="288" fill="var(--color-ink)">student_no</text>
+      <text class="field-type" x="284" y="288" fill="var(--color-muted)" text-anchor="end">VARCHAR(30)</text>
+      <text class="field-name" x="56" y="316" fill="var(--color-ink)">phone</text>
+      <text class="field-type" x="284" y="316" fill="var(--color-muted)" text-anchor="end">VARCHAR(20)</text>
+      <text class="field-name" x="56" y="344" fill="var(--color-ink)">gender</text>
+      <text class="field-type" x="284" y="344" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="56" y="372" fill="var(--color-ink)">dormitory_building</text>
+      <text class="field-type" x="284" y="372" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="56" y="400" fill="var(--color-ink)">room_no</text>
+      <text class="field-type" x="284" y="400" fill="var(--color-muted)" text-anchor="end">VARCHAR(20)</text>
+      <text class="field-name" x="56" y="428" fill="var(--color-ink)">avatar</text>
+      <text class="field-type" x="284" y="428" fill="var(--color-muted)" text-anchor="end">VARCHAR(255)</text>
+      <text class="field-name" x="56" y="456" fill="var(--color-ink)">role</text>
+      <text class="field-type" x="284" y="456" fill="var(--color-muted)" text-anchor="end">VARCHAR(20)</text>
+      <text class="field-name" x="56" y="484" fill="var(--color-ink)">status</text>
+      <text class="field-type" x="284" y="484" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="56" y="512" fill="var(--color-ink)">create_time</text>
+      <text class="field-type" x="284" y="512" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="56" y="540" fill="var(--color-ink)">update_time</text>
+      <text class="field-type" x="284" y="540" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+
+      <!-- Entity 2: repair_order (报修单表 - 23个字段) - FOCAL ACCENT -->
+      <rect x="360" y="340" width="300" height="720" rx="6" fill="var(--color-accent-tint)" stroke="var(--color-accent)" stroke-width="1.5"/>
+      <rect x="360" y="340" width="300" height="40" rx="6" fill="rgba(207,69,0,0.12)" stroke="none"/>
+      <line x1="360" y1="380" x2="660" y2="380" stroke="rgba(207,69,0,0.30)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="376" y="358" fill="var(--color-accent)">TABLE · 报修工单表 (CORE)</text>
+      <text class="entity-title" x="376" y="372" fill="var(--color-ink)">repair_order</text>
+      <!-- Fields -->
+      <text class="field-name" x="376" y="416" fill="var(--color-ink)"># id</text>
+      <text class="field-type" x="644" y="416" fill="var(--color-muted)" text-anchor="end">BIGINT (PK)</text>
+      <text class="field-name" x="376" y="444" fill="var(--color-ink)">order_no</text>
+      <text class="field-type" x="644" y="444" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="376" y="472" fill="var(--color-ink)">→ user_id</text>
+      <text class="field-type" x="644" y="472" fill="var(--color-muted)" text-anchor="end">BIGINT (FK)</text>
+      <text class="field-name" x="376" y="500" fill="var(--color-ink)">→ category_id</text>
+      <text class="field-type" x="644" y="500" fill="var(--color-muted)" text-anchor="end">BIGINT (FK)</text>
+      <text class="field-name" x="376" y="528" fill="var(--color-ink)">→ handler_id</text>
+      <text class="field-type" x="644" y="528" fill="var(--color-muted)" text-anchor="end">BIGINT (FK)</text>
+      <text class="field-name" x="376" y="556" fill="var(--color-ink)">→ worker_id</text>
+      <text class="field-type" x="644" y="556" fill="var(--color-muted)" text-anchor="end">BIGINT (FK)</text>
+      <text class="field-name" x="376" y="584" fill="var(--color-ink)">title</text>
+      <text class="field-type" x="644" y="584" fill="var(--color-muted)" text-anchor="end">VARCHAR(100)</text>
+      <text class="field-name" x="376" y="612" fill="var(--color-ink)">content</text>
+      <text class="field-type" x="644" y="612" fill="var(--color-muted)" text-anchor="end">TEXT</text>
+      <text class="field-name" x="376" y="640" fill="var(--color-ink)">image_url</text>
+      <text class="field-type" x="644" y="640" fill="var(--color-muted)" text-anchor="end">VARCHAR(255)</text>
+      <text class="field-name" x="376" y="668" fill="var(--color-ink)">repair_status</text>
+      <text class="field-type" x="644" y="668" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="376" y="696" fill="var(--color-ink)">submit_time</text>
+      <text class="field-type" x="644" y="696" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="724" fill="var(--color-ink)">assign_time</text>
+      <text class="field-type" x="644" y="724" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="752" fill="var(--color-ink)">accept_time</text>
+      <text class="field-type" x="644" y="752" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="780" fill="var(--color-ink)">worker_accept_time</text>
+      <text class="field-type" x="644" y="780" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="808" fill="var(--color-ink)">handle_time</text>
+      <text class="field-type" x="644" y="808" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="836" fill="var(--color-ink)">worker_complete_time</text>
+      <text class="field-type" x="644" y="836" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="864" fill="var(--color-ink)">finish_time</text>
+      <text class="field-type" x="644" y="864" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="892" fill="var(--color-ink)">student_confirm_time</text>
+      <text class="field-type" x="644" y="892" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="920" fill="var(--color-ink)">cancel_time</text>
+      <text class="field-type" x="644" y="920" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="948" fill="var(--color-ink)">remark</text>
+      <text class="field-type" x="644" y="948" fill="var(--color-muted)" text-anchor="end">VARCHAR(500)</text>
+      <text class="field-name" x="376" y="976" fill="var(--color-ink)">version</text>
+      <text class="field-type" x="644" y="976" fill="var(--color-muted)" text-anchor="end">INT</text>
+      <text class="field-name" x="376" y="1004" fill="var(--color-ink)">create_time</text>
+      <text class="field-type" x="644" y="1004" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="1032" fill="var(--color-ink)">update_time</text>
+      <text class="field-type" x="644" y="1032" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+
+      <!-- Entity 3: repair_category (分类表 - 7个字段) -->
+      <rect x="360" y="40" width="300" height="272" rx="6" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="360" y="40" width="300" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="360" y1="80" x2="660" y2="80" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="376" y="58" fill="var(--color-muted)">TABLE · 报修分类表</text>
+      <text class="entity-title" x="376" y="72" fill="var(--color-ink)">repair_category</text>
+      <!-- Fields -->
+      <text class="field-name" x="376" y="116" fill="var(--color-ink)"># id</text>
+      <text class="field-type" x="644" y="116" fill="var(--color-muted)" text-anchor="end">BIGINT (PK)</text>
+      <text class="field-name" x="376" y="144" fill="var(--color-ink)">category_name</text>
+      <text class="field-type" x="644" y="144" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="376" y="172" fill="var(--color-ink)">description</text>
+      <text class="field-type" x="644" y="172" fill="var(--color-muted)" text-anchor="end">VARCHAR(255)</text>
+      <text class="field-name" x="376" y="200" fill="var(--color-ink)">sort_num</text>
+      <text class="field-type" x="644" y="200" fill="var(--color-muted)" text-anchor="end">INT</text>
+      <text class="field-name" x="376" y="228" fill="var(--color-ink)">status</text>
+      <text class="field-type" x="644" y="228" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="376" y="256" fill="var(--color-ink)">create_time</text>
+      <text class="field-type" x="644" y="256" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="376" y="284" fill="var(--color-ink)">update_time</text>
+      <text class="field-type" x="644" y="284" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+
+      <!-- Entity 4: repair_feedback (反馈评价表 - 6个字段) -->
+      <rect x="720" y="160" width="260" height="244" rx="6" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="720" y="160" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="720" y1="200" x2="980" y2="200" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="736" y="178" fill="var(--color-muted)">TABLE · 反馈评价表</text>
+      <text class="entity-title" x="736" y="192" fill="var(--color-ink)">repair_feedback</text>
+      <!-- Fields -->
+      <text class="field-name" x="736" y="236" fill="var(--color-ink)"># id</text>
+      <text class="field-type" x="964" y="236" fill="var(--color-muted)" text-anchor="end">BIGINT (PK)</text>
+      <text class="field-name" x="736" y="264" fill="var(--color-ink)">→ repair_order_id</text>
+      <text class="field-type" x="964" y="264" fill="var(--color-muted)" text-anchor="end">BIGINT (FK)</text>
+      <text class="field-name" x="736" y="292" fill="var(--color-ink)">→ user_id</text>
+      <text class="field-type" x="964" y="292" fill="var(--color-muted)" text-anchor="end">BIGINT (FK)</text>
+      <text class="field-name" x="736" y="320" fill="var(--color-ink)">score</text>
+      <text class="field-type" x="964" y="320" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="736" y="348" fill="var(--color-ink)">content</text>
+      <text class="field-type" x="964" y="348" fill="var(--color-muted)" text-anchor="end">VARCHAR(500)</text>
+      <text class="field-name" x="736" y="376" fill="var(--color-ink)">create_time</text>
+      <text class="field-type" x="964" y="376" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+
+      <!-- Entity 5: notice (公告表 - 10个字段) -->
+      <rect x="40" y="620" width="260" height="356" rx="6" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="40" y="620" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="40" y1="660" x2="300" y2="660" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="56" y="638" fill="var(--color-muted)">TABLE · 系统公告表</text>
+      <text class="entity-title" x="56" y="652" fill="var(--color-ink)">notice</text>
+      <!-- Fields -->
+      <text class="field-name" x="56" y="696" fill="var(--color-ink)"># id</text>
+      <text class="field-type" x="284" y="696" fill="var(--color-muted)" text-anchor="end">BIGINT (PK)</text>
+      <text class="field-name" x="56" y="724" fill="var(--color-ink)">title</text>
+      <text class="field-type" x="284" y="724" fill="var(--color-muted)" text-anchor="end">VARCHAR(100)</text>
+      <text class="field-name" x="56" y="752" fill="var(--color-ink)">content</text>
+      <text class="field-type" x="284" y="752" fill="var(--color-muted)" text-anchor="end">TEXT</text>
+      <text class="field-name" x="56" y="780" fill="var(--color-ink)">publisher</text>
+      <text class="field-type" x="284" y="780" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="56" y="808" fill="var(--color-ink)">type</text>
+      <text class="field-type" x="284" y="808" fill="var(--color-muted)" text-anchor="end">VARCHAR(20)</text>
+      <text class="field-name" x="56" y="836" fill="var(--color-ink)">is_top</text>
+      <text class="field-type" x="284" y="836" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="56" y="864" fill="var(--color-ink)">status</text>
+      <text class="field-type" x="284" y="864" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="56" y="892" fill="var(--color-ink)">publish_time</text>
+      <text class="field-type" x="284" y="892" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="56" y="920" fill="var(--color-ink)">create_time</text>
+      <text class="field-type" x="284" y="920" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+      <text class="field-name" x="56" y="948" fill="var(--color-ink)">update_time</text>
+      <text class="field-type" x="284" y="948" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+
+      <!-- Entity 6: sys_operation_log (日志表 - 12个字段) -->
+      <rect x="720" y="460" width="260" height="412" rx="6" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="720" y="460" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="720" y1="500" x2="980" y2="500" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="736" y="478" fill="var(--color-muted)">TABLE · 操作日志表</text>
+      <text class="entity-title" x="736" y="492" fill="var(--color-ink)">sys_operation_log</text>
+      <!-- Fields -->
+      <text class="field-name" x="736" y="536" fill="var(--color-ink)"># id</text>
+      <text class="field-type" x="964" y="536" fill="var(--color-muted)" text-anchor="end">BIGINT (PK)</text>
+      <text class="field-name" x="736" y="564" fill="var(--color-ink)">operator_id</text>
+      <text class="field-type" x="964" y="564" fill="var(--color-muted)" text-anchor="end">BIGINT</text>
+      <text class="field-name" x="736" y="592" fill="var(--color-ink)">operator_name</text>
+      <text class="field-type" x="964" y="592" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="736" y="620" fill="var(--color-ink)">operation_type</text>
+      <text class="field-type" x="964" y="620" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="736" y="648" fill="var(--color-ink)">description</text>
+      <text class="field-type" x="964" y="648" fill="var(--color-muted)" text-anchor="end">VARCHAR(200)</text>
+      <text class="field-name" x="736" y="676" fill="var(--color-ink)">method_name</text>
+      <text class="field-type" x="964" y="676" fill="var(--color-muted)" text-anchor="end">VARCHAR(200)</text>
+      <text class="field-name" x="736" y="704" fill="var(--color-ink)">request_params</text>
+      <text class="field-type" x="964" y="704" fill="var(--color-muted)" text-anchor="end">TEXT</text>
+      <text class="field-name" x="736" y="732" fill="var(--color-ink)">ip_address</text>
+      <text class="field-type" x="964" y="732" fill="var(--color-muted)" text-anchor="end">VARCHAR(50)</text>
+      <text class="field-name" x="736" y="760" fill="var(--color-ink)">execution_time</text>
+      <text class="field-type" x="964" y="760" fill="var(--color-muted)" text-anchor="end">BIGINT</text>
+      <text class="field-name" x="736" y="788" fill="var(--color-ink)">status</text>
+      <text class="field-type" x="964" y="788" fill="var(--color-muted)" text-anchor="end">TINYINT</text>
+      <text class="field-name" x="736" y="816" fill="var(--color-ink)">error_message</text>
+      <text class="field-type" x="964" y="816" fill="var(--color-muted)" text-anchor="end">VARCHAR(500)</text>
+      <text class="field-name" x="736" y="844" fill="var(--color-ink)">create_time</text>
+      <text class="field-type" x="964" y="844" fill="var(--color-muted)" text-anchor="end">DATETIME</text>
+
+      <!-- ==================== LEGEND STRIP ==================== -->
+      <line x1="40" y1="1084" x2="980" y2="1084" stroke="var(--color-rule)" stroke-width="0.8"/>
+      <text class="legend-title" x="40" y="1102" fill="var(--color-muted)">LEGEND · 关系模型图例</text>
+
+      <rect x="40" y="1118" width="14" height="10" rx="2" fill="var(--color-accent-tint)" stroke="var(--color-accent)" stroke-width="1"/>
+      <text class="legend-text" x="60" y="1127" fill="var(--color-muted)">核心业务数据表</text>
+
+      <rect x="220" y="1118" width="14" height="10" rx="2" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <text class="legend-text" x="240" y="1127" fill="var(--color-muted)">标准物理数据表</text>
+
+      <text class="legend-text" x="410" y="1127" fill="var(--color-ink)" font-family="var(--font-mono)">#</text>
+      <text class="legend-text" x="426" y="1127" fill="var(--color-muted)">主键 (PK)</text>
+
+      <text class="legend-text" x="510" y="1127" fill="var(--color-ink)" font-family="var(--font-mono)">→</text>
+      <text class="legend-text" x="526" y="1127" fill="var(--color-muted)">外键关联 (FK)</text>
+
+      <text class="legend-text" x="620" y="1127" fill="var(--color-muted)" font-family="var(--font-mono)" font-weight="600">1 / N</text>
+      <text class="legend-text" x="660" y="1127" fill="var(--color-muted)">一对多/零关联基数 (Cardinality)</text>
+    </svg>
+  </div>
+</body>
+</html>

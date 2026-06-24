@@ -58,6 +58,15 @@ export function useWebSocket() {
               // ignore
             }
           })
+          // Admin: subscribe to system alerts (timeout, repeat faults, etc.)
+          client!.subscribe('/topic/admin/alert', (msg: Message) => {
+            try {
+              const body = JSON.parse(msg.body)
+              toast.show(body.content || body.title, 'info', 6000)
+            } catch {
+              // ignore
+            }
+          })
         }
       },
       onDisconnect: () => {

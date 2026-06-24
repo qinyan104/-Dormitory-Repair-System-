@@ -28,6 +28,7 @@ public class AutoAssignScheduler {
 
     private final RepairOrderService repairOrderService;
     private final SysUserService sysUserService;
+    private final RepairCategoryService repairCategoryService;
     private final NotificationService notificationService;
     private final SimpMessagingTemplate messagingTemplate;
     private final AiService aiService;
@@ -144,18 +145,114 @@ public class AutoAssignScheduler {
         }
     }
 
-    private void remindWithCooldown(String key, Long userId, String title, String content, Long orderId) {
-        if (userId == null) {
+    @Scheduled(fixedDelay = 300_000)
+    public void checkAdminAlerts() {
+        if (!reminderEnabled) {
             return;
         }
 
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime twoHoursAgo = now.minusHours(2);
+        LocalDateTime oneDayAgo = now.minusHours(24);
+        LocalDateTime sevenDaysAgo = now.minusDays(7);
+
+        // 1. 紧急工单超过2小时未受理 → 提醒管理员
+        List<RepairOrder> urgentTimeout = repairOrderService.lambdaQuery()
+                .eq(RepairOrder::getRepairStatus, 1)
+                .eq(RepairOrder::getUrgency, "紧急")
+                .le(RepairOrder::getSubmitTime, twoHoursAgo)
+                .list();
+        for (RepairOrder order : urgentTimeout) {
+            remindWithCooldown(
+                    "admin-urgent-timeout-" + order.getId(),
+                    null, // null means notify admin via broadcast
+                    "⚠️ 紧急工单超时",
+                    "工单《" + order.getTitle() + "》已超过2小时未受理，请尽快处理。",
+                    order.getId()
+            );
+        }
+
+        // 2. 普通工单超过24小时未受理 → 提醒管理员
+        List<RepairOrder> normalTimeout = repairOrderService.lambdaQuery()
+                .eq(RepairOrder::getRepairStatus, 1)
+                .ne(RepairOrder::getUrgency, "紧急")
+                .le(RepairOrder::getSubmitTime, oneDayAgo)
+                .list();
+        for (RepairOrder order : normalTimeout) {
+            remindWithCooldown(
+                    "admin-normal-timeout-" + order.getId(),
+                    null,
+                    "⏰ 工单超时未受理",
+                    "工单《" + order.getTitle() + "》已超过24小时未受理。",
+                    order.getId()
+            );
+        }
+
+        // 3. 同一宿舍7天内同类报修≥3次 → 标记重复故障
+        List<RepairOrder> recentOrders = repairOrderService.lambdaQuery()
+                .ge(RepairOrder::getSubmitTime, sevenDaysAgo)
+                .in(RepairOrder::getRepairStatus, 1, 2, 3, 4, 5)
+                .list();
+        Map<String, Long> dormCategoryCount = new java.util.HashMap<>();
+        for (RepairOrder o : recentOrders) {
+            SysUser u = sysUserService.getById(o.getUserId());
+            if (u != null && u.getDormitoryBuilding() != null && o.getCategoryId() != null) {
+                String key = u.getDormitoryBuilding() + "|" + u.getRoomNo() + "|" + o.getCategoryId();
+                dormCategoryCount.merge(key, 1L, Long::sum);
+            }
+        }
+        for (Map.Entry<String, Long> entry : dormCategoryCount.entrySet()) {
+            if (entry.getValue() >= 3) {
+                String[] parts = entry.getKey().split("\\|");
+                if (parts.length == 3) {
+                    remindWithCooldown(
+                            "repeat-fault-" + entry.getKey(),
+                            null,
+                            "🔁 重复故障提醒",
+                            entry.getValue() + "天内" + parts[0] + parts[1] + "已报修同类问题" + entry.getValue() + "次，建议排查。",
+                            null
+                    );
+                }
+            }
+        }
+
+        // 4. 同一分类7天内报修≥8次 → 高频故障
+        Map<Long, Long> categoryCount = new java.util.HashMap<>();
+        for (RepairOrder o : recentOrders) {
+            if (o.getCategoryId() != null) {
+                categoryCount.merge(o.getCategoryId(), 1L, Long::sum);
+            }
+        }
+        for (Map.Entry<Long, Long> entry : categoryCount.entrySet()) {
+            if (entry.getValue() >= 8) {
+                String catName = "该类型";
+                try {
+                    var cat = repairCategoryService.getById(entry.getKey());
+                    if (cat != null) catName = cat.getCategoryName();
+                } catch (Exception ignored) {}
+                remindWithCooldown(
+                        "high-freq-" + entry.getKey(),
+                        null,
+                        "📈 高频故障提醒",
+                        "7天内" + catName + "类报修达" + entry.getValue() + "次，请关注。",
+                        null
+                );
+            }
+        }
+    }
+
+    private void remindWithCooldown(String key, Long userId, String title, String content, Long orderId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime lastSentAt = reminderCooldowns.get(key);
         if (lastSentAt != null && lastSentAt.plusMinutes(reminderCooldownMinutes).isAfter(now)) {
             return;
         }
 
-        notifyUser(userId, title, content, orderId);
+        if (userId != null) {
+            notifyUser(userId, title, content, orderId);
+        } else {
+            notifyAdmin(title, content, orderId);
+        }
         reminderCooldowns.put(key, now);
     }
 
@@ -182,6 +279,25 @@ public class AutoAssignScheduler {
         } catch (Exception e) {
             log.error("Failed to save scheduler notification for user {} (order {}): {}",
                     userId, orderId, e.getMessage());
+        }
+    }
+
+    private void notifyAdmin(String title, String content, Long orderId) {
+        messagingTemplate.convertAndSend("/topic/admin/alert",
+                new NotificationMessage("ADMIN_ALERT", title, content, orderId, System.currentTimeMillis()));
+
+        try {
+            Notification notification = new Notification();
+            notification.setUserId(0L); // admin alert sent to virtual user 0
+            notification.setType("ADMIN_ALERT");
+            notification.setTitle(title);
+            notification.setContent(content);
+            notification.setOrderId(orderId);
+            notification.setIsRead(0);
+            notification.setCreateTime(LocalDateTime.now());
+            notificationService.save(notification);
+        } catch (Exception e) {
+            log.error("Failed to save admin alert: {}", e.getMessage());
         }
     }
 }

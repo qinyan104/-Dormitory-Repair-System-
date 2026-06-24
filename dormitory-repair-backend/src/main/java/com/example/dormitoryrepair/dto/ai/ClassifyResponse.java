@@ -12,5 +12,6 @@ public class ClassifyResponse {
     private Integer impactScope;
     private Double confidence;
     private String reason;
+    private String suggestion;
     private Boolean autoApplied;
 }

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>宿舍报修管理系统 - 功能模块图</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper:       #FFFFFF;   /* Pure White */
+      --color-paper-2:     #FFFFFF;   /* Pure White */
+      --color-ink:         #141413;   /* Ink Black */
+      --color-muted:       #696969;   /* Slate Gray */
+      --color-soft:        #A3A3A3;
+      --color-rule:        rgba(20,20,19,0.10);
+      --color-rule-solid:  #D1CDC7;
+      --color-accent:      #CF4500;   /* Signal Orange */
+      --color-accent-tint: rgba(207,69,0,0.06);
+      --color-link:        #3860BE;   /* Link Blue */
+      --font-sans:         'Geist', system-ui, -apple-system, sans-serif;
+      --font-serif:        'Instrument Serif', serif;
+      --font-mono:         'Geist Mono', ui-monospace, monospace;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-paper);
+      color: var(--color-ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .frame {
+      width: 100%;
+      max-width: 1500px;
+      background: var(--color-paper-2);
+      border: 1px solid var(--color-rule-solid);
+      border-radius: 8px;
+      padding: 2.5rem 2rem;
+    }
+
+    svg { width: 100%; display: block; background: transparent; }
+
+    /* SVG Text Styling */
+    svg text { user-select: none; }
+    svg .eyebrow-text { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+    svg .node-name { font-family: var(--font-sans); font-size: 15.5px; font-weight: 600; }
+    svg .sublabel { font-family: var(--font-mono); font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <svg viewBox="0 0 1272 800" xmlns="http://www.w3.org/2000/svg">
+      <!-- Dotted background -->
+      <defs>
+        <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+          <circle cx="1" cy="1" r="0.9" fill="rgba(20,20,19,0.06)"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="var(--color-paper)"/>
+      <rect width="100%" height="100%" fill="url(#dots)"/>
+
+      <!-- ==================== STRUCTURAL CONNECTOR SEGMENTS ==================== -->
+      
+      <!-- Top Level: Root Header (Y=104) to Column Containers (Y=170) via Mid Bus (Y=140) -->
+      <path d="M 636,104 L 636,140" fill="none" stroke="var(--color-muted)" stroke-width="1.2"/>
+      <path d="M 180,140 L 1092,140" fill="none" stroke="var(--color-muted)" stroke-width="1.2"/>
+      <path d="M 180,140 L 180,170" fill="none" stroke="var(--color-muted)" stroke-width="1.2"/>
+      <path d="M 484,140 L 484,170" fill="none" stroke="var(--color-muted)" stroke-width="1.2"/>
+      <path d="M 788,140 L 788,170" fill="none" stroke="var(--color-muted)" stroke-width="1.2"/>
+      <path d="M 1092,140 L 1092,170" fill="none" stroke="var(--color-muted)" stroke-width="1.2"/>
+
+      <!-- Column 1 Inner Index Lines (Vertical Line & Ticks at Leaf Center Y: 278, 382, 486, 590) -->
+      <path d="M 52,246 L 52,590" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 52,278 L 64,278" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 52,382 L 64,382" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 52,486 L 64,486" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 52,590 L 64,590" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+
+      <!-- Column 2 Inner Index Lines -->
+      <path d="M 356,246 L 356,590" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 356,278 L 368,278" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 356,382 L 368,382" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 356,486 L 368,486" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 356,590 L 368,590" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+
+      <!-- Column 3 Inner Index Lines -->
+      <path d="M 660,246 L 660,590" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 660,278 L 672,278" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 660,382 L 672,382" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 660,486 L 672,486" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 660,590 L 672,590" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+
+      <!-- Column 4 Inner Index Lines (Vertical Line & Ticks at Leaf Center Y: 278, 382, 486, 590, 694) -->
+      <path d="M 964,246 L 964,694" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 964,278 L 976,278" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 964,382 L 976,382" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 964,486 L 976,486" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 964,590 L 976,590" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+      <path d="M 964,694 L 976,694" fill="none" stroke="var(--color-rule-solid)" stroke-width="1"/>
+
+      <!-- ==================== MAIN SYSTEM HEADER (ROOT) ==================== -->
+      <g class="node">
+        <rect x="40" y="40" width="1192" height="64" rx="8" fill="var(--color-accent-tint)" stroke="var(--color-accent)" stroke-width="1.5"/>
+        <text class="eyebrow-text" x="636" y="60" fill="var(--color-accent)" text-anchor="middle" font-size="12px">SYSTEM ARCHITECTURE</text>
+        <text class="node-name" x="636" y="82" fill="var(--color-ink)" text-anchor="middle" font-size="19px">宿舍报修管理系统 (Dormitory Repair System)</text>
+      </g>
+
+      <!-- ==================== COLUMN 1: 基础服务模块 ==================== -->
+      <rect x="40" y="170" width="280" height="480" rx="8" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="40" y="170" width="280" height="56" rx="8" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="40" y1="226" x2="320" y2="226" stroke="var(--color-rule)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="180" y="192" fill="var(--color-muted)" text-anchor="middle">COMMON SERVICES</text>
+      <text class="node-name" x="180" y="209" fill="var(--color-ink)" text-anchor="middle">基础服务模块</text>
+
+      <!-- Leaf 1.1 -->
+      <g class="node">
+        <rect x="64" y="246" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="184" y="272" fill="var(--color-ink)" text-anchor="middle">用户登录与注册</text>
+        <text class="sublabel" x="184" y="290" fill="var(--color-muted)" text-anchor="middle">sys_user / Redis 验证码</text>
+      </g>
+
+      <!-- Leaf 1.2 -->
+      <g class="node">
+        <rect x="64" y="350" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="184" y="376" fill="var(--color-ink)" text-anchor="middle">个人中心与修改</text>
+        <text class="sublabel" x="184" y="394" fill="var(--color-muted)" text-anchor="middle">密码修改 / 头像上传</text>
+      </g>
+
+      <!-- Leaf 1.3 -->
+      <g class="node">
+        <rect x="64" y="454" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="184" y="480" fill="var(--color-ink)" text-anchor="middle">WebSocket 消息推送</text>
+        <text class="sublabel" x="184" y="498" fill="var(--color-muted)" text-anchor="middle">STOMP 异步实时广播</text>
+      </g>
+
+      <!-- Leaf 1.4 -->
+      <g class="node">
+        <rect x="64" y="558" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="184" y="584" fill="var(--color-ink)" text-anchor="middle">操作日志审计</text>
+        <text class="sublabel" x="184" y="602" fill="var(--color-muted)" text-anchor="middle">AOP 拦截 / 异步持久化</text>
+      </g>
+
+      <!-- ==================== COLUMN 2: 学生端功能 ==================== -->
+      <rect x="344" y="170" width="280" height="480" rx="8" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="344" y="170" width="280" height="56" rx="8" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="344" y1="226" x2="624" y2="226" stroke="var(--color-rule)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="484" y="192" fill="var(--color-muted)" text-anchor="middle">STUDENT PORTAL</text>
+      <text class="node-name" x="484" y="209" fill="var(--color-ink)" text-anchor="middle">学生端功能模块</text>
+
+      <!-- Leaf 2.1 (Highlight AI with Orange) -->
+      <g class="node">
+        <rect x="368" y="246" width="240" height="64" rx="6" fill="var(--color-accent-tint)" stroke="var(--color-accent)" stroke-width="1.2"/>
+        <text class="node-name" x="488" y="272" fill="var(--color-ink)" text-anchor="middle">在线故障申报 (AI智能分类)</text>
+        <text class="sublabel" x="488" y="290" fill="var(--color-accent)" text-anchor="middle">DeepSeek API 自动推断类别</text>
+      </g>
+
+      <!-- Leaf 2.2 -->
+      <g class="node">
+        <rect x="368" y="350" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="488" y="376" fill="var(--color-ink)" text-anchor="middle">进度查询跟踪</text>
+        <text class="sublabel" x="488" y="394" fill="var(--color-muted)" text-anchor="middle">UiTimeline 流程状态轴</text>
+      </g>
+
+      <!-- Leaf 2.3 -->
+      <g class="node">
+        <rect x="368" y="454" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="488" y="480" fill="var(--color-ink)" text-anchor="middle">服务验收评价</text>
+        <text class="sublabel" x="488" y="498" fill="var(--color-muted)" text-anchor="middle">UiStarDisplay 五星表情评价</text>
+      </g>
+
+      <!-- Leaf 2.4 -->
+      <g class="node">
+        <rect x="368" y="558" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="488" y="584" fill="var(--color-ink)" text-anchor="middle">查看系统公告</text>
+        <text class="sublabel" x="488" y="602" fill="var(--color-muted)" text-anchor="middle">公告列表分页 / 置顶公告</text>
+      </g>
+
+      <!-- ==================== COLUMN 3: 维修端功能 ==================== -->
+      <rect x="648" y="170" width="280" height="480" rx="8" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="648" y="170" width="280" height="56" rx="8" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="648" y1="226" x2="928" y2="226" stroke="var(--color-rule)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="788" y="192" fill="var(--color-muted)" text-anchor="middle">REPAIRER WORKBENCH</text>
+      <text class="node-name" x="788" y="209" fill="var(--color-ink)" text-anchor="middle">维修端工作台</text>
+
+      <!-- Leaf 3.1 -->
+      <g class="node">
+        <rect x="672" y="246" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="792" y="272" fill="var(--color-ink)" text-anchor="middle">待接单工作流</text>
+        <text class="sublabel" x="792" y="290" fill="var(--color-muted)" text-anchor="middle">工单池列表 / 抢单承接</text>
+      </g>
+
+      <!-- Leaf 3.2 -->
+      <g class="node">
+        <rect x="672" y="350" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="792" y="376" fill="var(--color-ink)" text-anchor="middle">工单完工登记</text>
+        <text class="sublabel" x="792" y="394" fill="var(--color-muted)" text-anchor="middle">录入维修结论与完工状态</text>
+      </g>
+
+      <!-- Leaf 3.3 -->
+      <g class="node">
+        <rect x="672" y="454" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="792" y="480" fill="var(--color-ink)" text-anchor="middle">个人工单统计</text>
+        <text class="sublabel" x="792" y="498" fill="var(--color-muted)" text-anchor="middle">月度接单量 / 完工率统计</text>
+      </g>
+
+      <!-- Leaf 3.4 -->
+      <g class="node">
+        <rect x="672" y="558" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="792" y="584" fill="var(--color-ink)" text-anchor="middle">评价反馈查看</text>
+        <text class="sublabel" x="792" y="602" fill="var(--color-muted)" text-anchor="middle">查看服务打分与反馈留言</text>
+      </g>
+
+      <!-- ==================== COLUMN 4: 管理端控制台 ==================== -->
+      <rect x="952" y="170" width="280" height="590" rx="8" fill="#ffffff" stroke="var(--color-ink)" stroke-width="1.2"/>
+      <rect x="952" y="170" width="280" height="56" rx="8" fill="rgba(20,20,19,0.03)" stroke="none"/>
+      <line x1="952" y1="226" x2="1232" y2="226" stroke="var(--color-rule)" stroke-width="1.2"/>
+      <text class="eyebrow-text" x="1092" y="192" fill="var(--color-muted)" text-anchor="middle">ADMIN CONTROL PANEL</text>
+      <text class="node-name" x="1092" y="209" fill="var(--color-ink)" text-anchor="middle">管理员控制台</text>
+
+      <!-- Leaf 4.1 (Highlight AI with Orange) -->
+      <g class="node">
+        <rect x="976" y="246" width="240" height="64" rx="6" fill="var(--color-accent-tint)" stroke="var(--color-accent)" stroke-width="1.2"/>
+        <text class="node-name" x="1096" y="272" fill="var(--color-ink)" text-anchor="middle">工单分配调度 (AI智能推荐)</text>
+        <text class="sublabel" x="1096" y="290" fill="var(--color-accent)" text-anchor="middle">自动匹配最优维修人员</text>
+      </g>
+
+      <!-- Leaf 4.2 -->
+      <g class="node">
+        <rect x="976" y="350" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="1096" y="376" fill="var(--color-ink)" text-anchor="middle">公告发布置顶</text>
+        <text class="sublabel" x="1096" y="394" fill="var(--color-muted)" text-anchor="middle">公告 CRUD / 置顶展示控制</text>
+      </g>
+
+      <!-- Leaf 4.3 -->
+      <g class="node">
+        <rect x="976" y="454" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="1096" y="480" fill="var(--color-ink)" text-anchor="middle">用户管理与控制</text>
+        <text class="sublabel" x="1096" y="498" fill="var(--color-muted)" text-anchor="middle">状态禁用启用 / 密码重置</text>
+      </g>
+
+      <!-- Leaf 4.4 -->
+      <g class="node">
+        <rect x="976" y="558" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="1096" y="584" fill="var(--color-ink)" text-anchor="middle">报修分类配置</text>
+        <text class="sublabel" x="1096" y="602" fill="var(--color-muted)" text-anchor="middle">排序编号 / 可用状态管理</text>
+      </g>
+
+      <!-- Leaf 4.5 -->
+      <g class="node">
+        <rect x="976" y="662" width="240" height="64" rx="6" fill="#F3F0EE" stroke="var(--color-rule-solid)" stroke-width="1"/>
+        <text class="node-name" x="1096" y="688" fill="var(--color-ink)" text-anchor="middle">统计分析大屏</text>
+        <text class="sublabel" x="1096" y="706" fill="var(--color-muted)" text-anchor="middle">大屏看板 / POI Excel 导出</text>
+      </g>
+    </svg>
+  </div>
+</body>
+</html>

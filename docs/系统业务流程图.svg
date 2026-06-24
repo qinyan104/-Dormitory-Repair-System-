@@ -1,0 +1,166 @@
+<svg viewBox="200 20 630 1100" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .eyebrow-text { font-family: Consolas, 'Courier New', monospace; font-size: 11px; font-weight: bold; letter-spacing: 0.12em; text-transform: uppercase; }
+    .node-name { font-family: 'Microsoft YaHei', -apple-system, sans-serif; font-size: 16px; font-weight: bold; }
+    .sublabel { font-family: Consolas, 'Courier New', monospace; font-size: 13px; }
+    .arrow-label { font-family: 'Microsoft YaHei', -apple-system, sans-serif; font-size: 13px; font-weight: bold; letter-spacing: 0.04em; }
+    .legend-title { font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; font-weight: bold; letter-spacing: 0.14em; }
+    .legend-text { font-family: 'Microsoft YaHei', -apple-system, sans-serif; font-size: 12.5px; }
+  </style>
+
+  <defs>
+    <!-- Arrow markers -->
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#696969"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#CF4500"/>
+    </marker>
+
+    <!-- Dot pattern for dotted paper background -->
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(20,20,19,0.06)"/>
+    </pattern>
+  </defs>
+
+  <!-- Dotted background -->
+  <rect x="200" y="20" width="630" height="1100" fill="#FFFFFF"/>
+  <rect x="200" y="20" width="630" height="1100" fill="url(#dots)"/>
+
+  <!-- ==================== CONNECTIONS / ARROWS ==================== -->
+  
+  <!-- Start → Step 1 -->
+  <path d="M 360,84 L 360,150" fill="none" stroke="#696969" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 1 → State 1 (Pending) -->
+  <path d="M 360,222 L 360,280" fill="none" stroke="#CF4500" stroke-width="1.5" marker-end="url(#arrow-accent)"/>
+
+  <!-- State 1 → Step 2 (Assign) -->
+  <path d="M 360,344 L 360,410" fill="none" stroke="#CF4500" stroke-width="1.5" marker-end="url(#arrow-accent)"/>
+
+  <!-- State 1 → State 6 (Cancel) -->
+  <path d="M 480,312 L 560,312" fill="none" stroke="#696969" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2 → Step 3 (Repair) -->
+  <path d="M 360,482 L 360,540" fill="none" stroke="#696969" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 3 → Step 4 (Confirm) -->
+  <path d="M 360,604 L 360,660" fill="none" stroke="#696969" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 4 → State 5 (Done) -->
+  <path d="M 360,724 L 360,780" fill="none" stroke="#696969" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- State 5 → End -->
+  <path d="M 360,844 L 360,900" fill="none" stroke="#696969" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- State 6 (Cancel) → End Right Edge Connection -->
+  <path d="M 740,312 L 800,312 L 800,922 L 440,922" fill="none" stroke="#696969" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+
+  <!-- ==================== ARROW LABELS ==================== -->
+  
+  <!-- Submit -> Pending label -->
+  <rect x="320" y="242" width="80" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="360" y="255" fill="#CF4500" text-anchor="middle">提交报修</text>
+
+  <!-- Pending -> Cancel label -->
+  <rect x="495" y="303" width="60" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="525" y="316" fill="#696969" text-anchor="middle">学生撤销</text>
+
+  <!-- Pending -> Assign label -->
+  <rect x="320" y="368" width="80" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="360" y="381" fill="#CF4500" text-anchor="middle">进入派单</text>
+
+  <!-- Assign -> Repair label -->
+  <rect x="320" y="502" width="80" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="360" y="515" fill="#696969" text-anchor="middle">接单处理</text>
+
+  <!-- Repair -> Confirm label -->
+  <rect x="320" y="623" width="80" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="360" y="636" fill="#696969" text-anchor="middle">完工提报</text>
+
+  <!-- Confirm -> Done label -->
+  <rect x="320" y="743" width="80" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="360" y="756" fill="#696969" text-anchor="middle">验收评价</text>
+
+  <!-- Done -> End label -->
+  <rect x="320" y="863" width="80" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="360" y="876" fill="#696969" text-anchor="middle">工单归档</text>
+
+  <!-- Cancel -> End Bus label -->
+  <rect x="610" y="913" width="80" height="18" rx="2" fill="#FFFFFF"/>
+  <text class="arrow-label" x="650" y="926" fill="#696969" text-anchor="middle">工单关闭</text>
+
+
+  <!-- ==================== NODES / BLOCKS ==================== -->
+
+  <!-- Start (Oval - wide pill rx=22) -->
+  <rect x="280" y="40" width="160" height="44" rx="22" fill="#F3F0EE" stroke="#141413" stroke-width="1.5"/>
+  <text class="node-name" x="360" y="68" fill="#141413" text-anchor="middle">开始</text>
+
+  <!-- Step 1: 学生在线报修 (Focal - AI 故障分类) -->
+  <rect x="230" y="150" width="260" height="72" rx="8" fill="#F3F0EE"/>
+  <rect x="230" y="150" width="260" height="72" rx="8" fill="rgba(207,69,0,0.08)" stroke="#CF4500" stroke-width="1.5"/>
+  <text class="eyebrow-text" x="360" y="169" fill="#CF4500" text-anchor="middle">STUDENT & AI</text>
+  <text class="node-name" x="360" y="188" fill="#141413" text-anchor="middle">在线提交报修申请</text>
+  <text class="sublabel" x="360" y="207" fill="#CF4500" text-anchor="middle">AI 故障智能自动分类</text>
+
+  <!-- State 1: 待受理状态 (State box) -->
+  <rect x="240" y="280" width="240" height="64" rx="8" fill="rgba(20,20,19,0.03)" stroke="#696969" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="360" y="298" fill="#696969" text-anchor="middle">STATUS 1</text>
+  <text class="node-name" x="360" y="316" fill="#141413" text-anchor="middle">待受理状态</text>
+  <text class="sublabel" x="360" y="333" fill="#696969" text-anchor="middle">sys_repair_order.status = 1</text>
+
+  <!-- State 6: 已取消状态 (State box) -->
+  <rect x="560" y="280" width="180" height="64" rx="8" fill="rgba(20,20,19,0.03)" stroke="#696969" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="650" y="298" fill="#696969" text-anchor="middle">STATUS 6</text>
+  <text class="node-name" x="650" y="316" fill="#141413" text-anchor="middle">已取消状态</text>
+  <text class="sublabel" x="650" y="333" fill="#696969" text-anchor="middle">status = 6</text>
+
+  <!-- Step 2: 管理员指派工单 (Focal - AI 派单推荐) -->
+  <rect x="230" y="410" width="260" height="72" rx="8" fill="#F3F0EE"/>
+  <rect x="230" y="410" width="260" height="72" rx="8" fill="rgba(207,69,0,0.08)" stroke="#CF4500" stroke-width="1.5"/>
+  <text class="eyebrow-text" x="360" y="429" fill="#CF4500" text-anchor="middle">ADMIN & AI</text>
+  <text class="node-name" x="360" y="448" fill="#141413" text-anchor="middle">管理员审核指派工单</text>
+  <text class="sublabel" x="360" y="467" fill="#CF4500" text-anchor="middle">AI 智能匹配派单推荐</text>
+
+  <!-- Step 3: 接单及维修处理 (Step box) -->
+  <rect x="240" y="540" width="240" height="64" rx="8" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="360" y="558" fill="#696969" text-anchor="middle">REPAIRER · STATUS 2 & 3</text>
+  <text class="node-name" x="360" y="576" fill="#141413" text-anchor="middle">维修员接单与现场维修</text>
+  <text class="sublabel" x="360" y="593" fill="#696969" text-anchor="middle">已派单/维修中 (status=2/3)</text>
+
+  <!-- Step 4: 学生验收评价 (Step box) -->
+  <rect x="240" y="660" width="240" height="64" rx="8" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="360" y="678" fill="#696969" text-anchor="middle">STUDENT · STATUS 4</text>
+  <text class="node-name" x="360" y="696" fill="#141413" text-anchor="middle">学生验收并提交服务评价</text>
+  <text class="sublabel" x="360" y="713" fill="#696969" text-anchor="middle">待确认验收 (status=4)</text>
+
+  <!-- State 5: 已完成状态 (State box) -->
+  <rect x="240" y="780" width="240" height="64" rx="8" fill="rgba(20,20,19,0.03)" stroke="#696969" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="360" y="798" fill="#696969" text-anchor="middle">STATUS 5</text>
+  <text class="node-name" x="360" y="816" fill="#141413" text-anchor="middle">工单完成并关闭归档</text>
+  <text class="sublabel" x="360" y="833" fill="#696969" text-anchor="middle">已完成 (status=5)</text>
+
+  <!-- End (Oval - wide pill rx=22) -->
+  <rect x="280" y="900" width="160" height="44" rx="22" fill="#F3F0EE" stroke="#141413" stroke-width="1.5"/>
+  <text class="node-name" x="360" y="928" fill="#141413" text-anchor="middle">结束</text>
+
+
+  <!-- ==================== LEGEND STRIP ==================== -->
+  <line x1="210" y1="968" x2="820" y2="968" stroke="rgba(20,20,19,0.10)" stroke-width="0.8"/>
+  <text class="legend-title" x="210" y="988" fill="#696969">LEGEND · 图例说明</text>
+
+  <!-- Focal node indicator -->
+  <rect x="210" y="1002" width="14" height="10" rx="2" fill="rgba(207,69,0,0.08)" stroke="#CF4500" stroke-width="1"/>
+  <text class="legend-text" x="232" y="1011" fill="#696969">AI 核心嵌入节点 (智能分类/智能派单)</text>
+
+  <!-- Standard step indicator -->
+  <rect x="210" y="1026" width="14" height="10" rx="2" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <text class="legend-text" x="232" y="1035" fill="#696969">标准业务执行步骤 (Step / Action)</text>
+
+  <!-- State indicator -->
+  <rect x="210" y="1050" width="14" height="10" rx="2" fill="rgba(20,20,19,0.03)" stroke="#696969" stroke-width="0.8"/>
+  <text class="legend-text" x="232" y="1059" fill="#696969">工单数据库状态 (Order State)</text>
+
+</svg>

@@ -270,6 +270,10 @@ const handleSubmit = async () => {
               <span class="ai-label">判断依据</span>
               <span class="ai-value ai-reason">{{ aiResult.reason }}</span>
             </div>
+            <div v-if="aiResult.suggestion" class="ai-result-row ai-result-suggestion">
+              <span class="ai-label">处理建议</span>
+              <span class="ai-value">{{ aiResult.suggestion }}</span>
+            </div>
           </div>
 
           <div v-if="aiError" class="ai-error">

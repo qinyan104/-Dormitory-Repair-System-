@@ -1,0 +1,280 @@
+<svg viewBox="0 0 1020 1160" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .eyebrow-text { font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; font-weight: bold; letter-spacing: 0.14em; text-transform: uppercase; }
+    .entity-title { font-family: 'Microsoft YaHei', -apple-system, sans-serif; font-size: 17px; font-weight: bold; }
+    .field-name { font-family: Consolas, 'Courier New', monospace; font-size: 13px; font-weight: bold; }
+    .field-type { font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; }
+    .cardinality-text { font-family: Consolas, 'Courier New', monospace; font-size: 13.5px; font-weight: bold; }
+    .relation-label { font-family: Consolas, 'Courier New', monospace; font-size: 12px; font-weight: bold; letter-spacing: 0.08em; }
+    .legend-title { font-family: Consolas, 'Courier New', monospace; font-size: 11px; font-weight: bold; letter-spacing: 0.14em; }
+    .legend-text { font-family: 'Microsoft YaHei', -apple-system, sans-serif; font-size: 12.5px; }
+  </style>
+
+  <defs>
+    <!-- Dot pattern for dotted paper background -->
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(20,20,19,0.06)"/>
+    </pattern>
+  </defs>
+
+  <!-- Dotted background -->
+  <rect width="100%" height="100%" fill="#FFFFFF"/>
+  <rect width="100%" height="100%" fill="url(#dots)"/>
+
+  <!-- ==================== RELATIONSHIPS ==================== -->
+  
+  <!-- 1. Category — Order (1:N, vertical) -->
+  <line x1="510" y1="312" x2="510" y2="340" stroke="#696969" stroke-width="1.5"/>
+
+  <!-- 2. User — Order (1:N, orthogonal) -->
+  <path d="M 300,316 L 330,316 L 330,444 L 360,444" fill="none" stroke="#696969" stroke-width="1.5"/>
+
+  <!-- 3. Order — Feedback (1:0..1, orthogonal) -->
+  <path d="M 660,416 L 690,416 L 690,292 L 720,292" fill="none" stroke="#696969" stroke-width="1.5"/>
+
+
+  <!-- ==================== CARDINALITY LABELS ==================== -->
+
+  <!-- Category - Order Cardinality -->
+  <text class="cardinality-text" x="518" y="322" fill="#696969">1</text>
+  <text class="cardinality-text" x="518" y="334" fill="#696969">N</text>
+  
+  <!-- User - Order Cardinality -->
+  <text class="cardinality-text" x="312" y="310" fill="#696969">1</text>
+  <text class="cardinality-text" x="348" y="438" fill="#696969">N</text>
+
+  <!-- Order - Feedback Cardinality -->
+  <text class="cardinality-text" x="672" y="410" fill="#696969">1</text>
+  <text class="cardinality-text" x="692" y="286" fill="#696969">0..1</text>
+
+
+  <!-- ==================== RELATIONSHIP LABELS ==================== -->
+
+  <!-- Category -> Order label -->
+  <rect x="494" y="315" width="32" height="14" rx="2" fill="#FFFFFF"/>
+  <text class="relation-label" x="510" y="325" fill="#696969" text-anchor="middle">归属</text>
+
+  <!-- User -> Order label -->
+  <rect x="314" y="373" width="32" height="14" rx="2" fill="#FFFFFF"/>
+  <text class="relation-label" x="330" y="383" fill="#696969" text-anchor="middle">提交</text>
+
+  <!-- Order -> Feedback label -->
+  <rect x="674" y="347" width="32" height="14" rx="2" fill="#FFFFFF"/>
+  <text class="relation-label" x="690" y="357" fill="#696969" text-anchor="middle">评价</text>
+
+
+  <!-- ==================== ENTITY BLOCKS ==================== -->
+
+  <!-- Entity 1: sys_user (用户表 - 14个字段) -->
+  <rect x="40" y="100" width="260" height="468" rx="6" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <rect x="40" y="100" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+  <line x1="40" y1="140" x2="300" y2="140" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="56" y="118" fill="#696969">TABLE · 用户表</text>
+  <text class="entity-title" x="56" y="132" fill="#141413">sys_user</text>
+  <!-- Fields -->
+  <text class="field-name" x="56" y="176" fill="#141413"># id</text>
+  <text class="field-type" x="284" y="176" fill="#696969" text-anchor="end">BIGINT (PK)</text>
+  <text class="field-name" x="56" y="204" fill="#141413">username</text>
+  <text class="field-type" x="284" y="204" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="56" y="232" fill="#141413">password</text>
+  <text class="field-type" x="284" y="232" fill="#696969" text-anchor="end">VARCHAR(100)</text>
+  <text class="field-name" x="56" y="260" fill="#141413">real_name</text>
+  <text class="field-type" x="284" y="260" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="56" y="288" fill="#141413">student_no</text>
+  <text class="field-type" x="284" y="288" fill="#696969" text-anchor="end">VARCHAR(30)</text>
+  <text class="field-name" x="56" y="316" fill="#141413">phone</text>
+  <text class="field-type" x="284" y="316" fill="#696969" text-anchor="end">VARCHAR(20)</text>
+  <text class="field-name" x="56" y="344" fill="#141413">gender</text>
+  <text class="field-type" x="284" y="344" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="56" y="372" fill="#141413">dormitory_building</text>
+  <text class="field-type" x="284" y="372" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="56" y="400" fill="#141413">room_no</text>
+  <text class="field-type" x="284" y="400" fill="#696969" text-anchor="end">VARCHAR(20)</text>
+  <text class="field-name" x="56" y="428" fill="#141413">avatar</text>
+  <text class="field-type" x="284" y="428" fill="#696969" text-anchor="end">VARCHAR(255)</text>
+  <text class="field-name" x="56" y="456" fill="#141413">role</text>
+  <text class="field-type" x="284" y="456" fill="#696969" text-anchor="end">VARCHAR(20)</text>
+  <text class="field-name" x="56" y="484" fill="#141413">status</text>
+  <text class="field-type" x="284" y="484" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="56" y="512" fill="#141413">create_time</text>
+  <text class="field-type" x="284" y="512" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="56" y="540" fill="#141413">update_time</text>
+  <text class="field-type" x="284" y="540" fill="#696969" text-anchor="end">DATETIME</text>
+
+  <!-- Entity 2: repair_order (报修单表 - 23个字段) - FOCAL ACCENT -->
+  <rect x="360" y="340" width="300" height="720" rx="6" fill="rgba(207,69,0,0.08)" stroke="#CF4500" stroke-width="1.5"/>
+  <rect x="360" y="340" width="300" height="40" rx="6" fill="rgba(207,69,0,0.12)" stroke="none"/>
+  <line x1="360" y1="380" x2="660" y2="380" stroke="rgba(207,69,0,0.30)" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="376" y="358" fill="#CF4500">TABLE · 报修工单表 (CORE)</text>
+  <text class="entity-title" x="376" y="372" fill="#141413">repair_order</text>
+  <!-- Fields -->
+  <text class="field-name" x="376" y="416" fill="#141413"># id</text>
+  <text class="field-type" x="644" y="416" fill="#696969" text-anchor="end">BIGINT (PK)</text>
+  <text class="field-name" x="376" y="444" fill="#141413">order_no</text>
+  <text class="field-type" x="644" y="444" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="376" y="472" fill="#141413">→ user_id</text>
+  <text class="field-type" x="644" y="472" fill="#696969" text-anchor="end">BIGINT (FK)</text>
+  <text class="field-name" x="376" y="500" fill="#141413">→ category_id</text>
+  <text class="field-type" x="644" y="500" fill="#696969" text-anchor="end">BIGINT (FK)</text>
+  <text class="field-name" x="376" y="528" fill="#141413">→ handler_id</text>
+  <text class="field-type" x="644" y="528" fill="#696969" text-anchor="end">BIGINT (FK)</text>
+  <text class="field-name" x="376" y="556" fill="#141413">→ worker_id</text>
+  <text class="field-type" x="644" y="556" fill="#696969" text-anchor="end">BIGINT (FK)</text>
+  <text class="field-name" x="376" y="584" fill="#141413">title</text>
+  <text class="field-type" x="644" y="584" fill="#696969" text-anchor="end">VARCHAR(100)</text>
+  <text class="field-name" x="376" y="612" fill="#141413">content</text>
+  <text class="field-type" x="644" y="612" fill="#696969" text-anchor="end">TEXT</text>
+  <text class="field-name" x="376" y="640" fill="#141413">image_url</text>
+  <text class="field-type" x="644" y="640" fill="#696969" text-anchor="end">VARCHAR(255)</text>
+  <text class="field-name" x="376" y="668" fill="#141413">repair_status</text>
+  <text class="field-type" x="644" y="668" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="376" y="696" fill="#141413">submit_time</text>
+  <text class="field-type" x="644" y="696" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="724" fill="#141413">assign_time</text>
+  <text class="field-type" x="644" y="724" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="752" fill="#141413">accept_time</text>
+  <text class="field-type" x="644" y="752" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="780" fill="#141413">worker_accept_time</text>
+  <text class="field-type" x="644" y="780" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="808" fill="#141413">handle_time</text>
+  <text class="field-type" x="644" y="808" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="836" fill="#141413">worker_complete_time</text>
+  <text class="field-type" x="644" y="836" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="864" fill="#141413">finish_time</text>
+  <text class="field-type" x="644" y="864" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="892" fill="#141413">student_confirm_time</text>
+  <text class="field-type" x="644" y="892" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="920" fill="#141413">cancel_time</text>
+  <text class="field-type" x="644" y="920" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="948" fill="#141413">remark</text>
+  <text class="field-type" x="644" y="948" fill="#696969" text-anchor="end">VARCHAR(500)</text>
+  <text class="field-name" x="376" y="976" fill="#141413">version</text>
+  <text class="field-type" x="644" y="976" fill="#696969" text-anchor="end">INT</text>
+  <text class="field-name" x="376" y="1004" fill="#141413">create_time</text>
+  <text class="field-type" x="644" y="1004" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="1032" fill="#141413">update_time</text>
+  <text class="field-type" x="644" y="1032" fill="#696969" text-anchor="end">DATETIME</text>
+
+  <!-- Entity 3: repair_category (分类表 - 7个字段) -->
+  <rect x="360" y="40" width="300" height="272" rx="6" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <rect x="360" y="40" width="300" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+  <line x1="360" y1="80" x2="660" y2="80" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="376" y="58" fill="#696969">TABLE · 报修分类表</text>
+  <text class="entity-title" x="376" y="72" fill="#141413">repair_category</text>
+  <!-- Fields -->
+  <text class="field-name" x="376" y="116" fill="#141413"># id</text>
+  <text class="field-type" x="644" y="116" fill="#696969" text-anchor="end">BIGINT (PK)</text>
+  <text class="field-name" x="376" y="144" fill="#141413">category_name</text>
+  <text class="field-type" x="644" y="144" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="376" y="172" fill="#141413">description</text>
+  <text class="field-type" x="644" y="172" fill="#696969" text-anchor="end">VARCHAR(255)</text>
+  <text class="field-name" x="376" y="200" fill="#141413">sort_num</text>
+  <text class="field-type" x="644" y="200" fill="#696969" text-anchor="end">INT</text>
+  <text class="field-name" x="376" y="228" fill="#141413">status</text>
+  <text class="field-type" x="644" y="228" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="376" y="256" fill="#141413">create_time</text>
+  <text class="field-type" x="644" y="256" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="376" y="284" fill="#141413">update_time</text>
+  <text class="field-type" x="644" y="284" fill="#696969" text-anchor="end">DATETIME</text>
+
+  <!-- Entity 4: repair_feedback (反馈评价表 - 6个字段) -->
+  <rect x="720" y="160" width="260" height="244" rx="6" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <rect x="720" y="160" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+  <line x1="720" y1="200" x2="980" y2="200" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="736" y="178" fill="#696969">TABLE · 反馈评价表</text>
+  <text class="entity-title" x="736" y="192" fill="#141413">repair_feedback</text>
+  <!-- Fields -->
+  <text class="field-name" x="736" y="236" fill="#141413"># id</text>
+  <text class="field-type" x="964" y="236" fill="#696969" text-anchor="end">BIGINT (PK)</text>
+  <text class="field-name" x="736" y="264" fill="#141413">→ repair_order_id</text>
+  <text class="field-type" x="964" y="264" fill="#696969" text-anchor="end">BIGINT (FK)</text>
+  <text class="field-name" x="736" y="292" fill="#141413">→ user_id</text>
+  <text class="field-type" x="964" y="292" fill="#696969" text-anchor="end">BIGINT (FK)</text>
+  <text class="field-name" x="736" y="320" fill="#141413">score</text>
+  <text class="field-type" x="964" y="320" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="736" y="348" fill="#141413">content</text>
+  <text class="field-type" x="964" y="348" fill="#696969" text-anchor="end">VARCHAR(500)</text>
+  <text class="field-name" x="736" y="376" fill="#141413">create_time</text>
+  <text class="field-type" x="964" y="376" fill="#696969" text-anchor="end">DATETIME</text>
+
+  <!-- Entity 5: notice (公告表 - 10个字段) -->
+  <rect x="40" y="620" width="260" height="356" rx="6" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <rect x="40" y="620" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+  <line x1="40" y1="660" x2="300" y2="660" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="56" y="638" fill="#696969">TABLE · 系统公告表</text>
+  <text class="entity-title" x="56" y="652" fill="#141413">notice</text>
+  <!-- Fields -->
+  <text class="field-name" x="56" y="696" fill="#141413"># id</text>
+  <text class="field-type" x="284" y="696" fill="#696969" text-anchor="end">BIGINT (PK)</text>
+  <text class="field-name" x="56" y="724" fill="#141413">title</text>
+  <text class="field-type" x="284" y="724" fill="#696969" text-anchor="end">VARCHAR(100)</text>
+  <text class="field-name" x="56" y="752" fill="#141413">content</text>
+  <text class="field-type" x="284" y="752" fill="#696969" text-anchor="end">TEXT</text>
+  <text class="field-name" x="56" y="780" fill="#141413">publisher</text>
+  <text class="field-type" x="284" y="780" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="56" y="808" fill="#141413">type</text>
+  <text class="field-type" x="284" y="808" fill="#696969" text-anchor="end">VARCHAR(20)</text>
+  <text class="field-name" x="56" y="836" fill="#141413">is_top</text>
+  <text class="field-type" x="284" y="836" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="56" y="864" fill="#141413">status</text>
+  <text class="field-type" x="284" y="864" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="56" y="892" fill="#141413">publish_time</text>
+  <text class="field-type" x="284" y="892" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="56" y="920" fill="#141413">create_time</text>
+  <text class="field-type" x="284" y="920" fill="#696969" text-anchor="end">DATETIME</text>
+  <text class="field-name" x="56" y="948" fill="#141413">update_time</text>
+  <text class="field-type" x="284" y="948" fill="#696969" text-anchor="end">DATETIME</text>
+
+  <!-- Entity 6: sys_operation_log (日志表 - 12个字段) -->
+  <rect x="720" y="460" width="260" height="412" rx="6" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <rect x="720" y="460" width="260" height="40" rx="6" fill="rgba(20,20,19,0.03)" stroke="none"/>
+  <line x1="720" y1="500" x2="980" y2="500" stroke="rgba(20,20,19,0.15)" stroke-width="1.2"/>
+  <text class="eyebrow-text" x="736" y="478" fill="#696969">TABLE · 操作日志表</text>
+  <text class="entity-title" x="736" y="492" fill="#141413">sys_operation_log</text>
+  <!-- Fields -->
+  <text class="field-name" x="736" y="536" fill="#141413"># id</text>
+  <text class="field-type" x="964" y="536" fill="#696969" text-anchor="end">BIGINT (PK)</text>
+  <text class="field-name" x="736" y="564" fill="#141413">operator_id</text>
+  <text class="field-type" x="964" y="564" fill="#696969" text-anchor="end">BIGINT</text>
+  <text class="field-name" x="736" y="592" fill="#141413">operator_name</text>
+  <text class="field-type" x="964" y="592" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="736" y="620" fill="#141413">operation_type</text>
+  <text class="field-type" x="964" y="620" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="736" y="648" fill="#141413">description</text>
+  <text class="field-type" x="964" y="648" fill="#696969" text-anchor="end">VARCHAR(200)</text>
+  <text class="field-name" x="736" y="676" fill="#141413">method_name</text>
+  <text class="field-type" x="964" y="676" fill="#696969" text-anchor="end">VARCHAR(200)</text>
+  <text class="field-name" x="736" y="704" fill="#141413">request_params</text>
+  <text class="field-type" x="964" y="704" fill="#696969" text-anchor="end">TEXT</text>
+  <text class="field-name" x="736" y="732" fill="#141413">ip_address</text>
+  <text class="field-type" x="964" y="732" fill="#696969" text-anchor="end">VARCHAR(50)</text>
+  <text class="field-name" x="736" y="760" fill="#141413">execution_time</text>
+  <text class="field-type" x="964" y="760" fill="#696969" text-anchor="end">BIGINT</text>
+  <text class="field-name" x="736" y="788" fill="#141413">status</text>
+  <text class="field-type" x="964" y="788" fill="#696969" text-anchor="end">TINYINT</text>
+  <text class="field-name" x="736" y="816" fill="#141413">error_message</text>
+  <text class="field-type" x="964" y="816" fill="#696969" text-anchor="end">VARCHAR(500)</text>
+  <text class="field-name" x="736" y="844" fill="#141413">create_time</text>
+  <text class="field-type" x="964" y="844" fill="#696969" text-anchor="end">DATETIME</text>
+
+
+  <!-- ==================== LEGEND STRIP ==================== -->
+  <line x1="40" y1="1084" x2="980" y2="1084" stroke="rgba(20,20,19,0.10)" stroke-width="0.8"/>
+  <text class="legend-title" x="40" y="1102" fill="#696969">LEGEND · 关系模型图例</text>
+
+  <rect x="40" y="1118" width="14" height="10" rx="2" fill="rgba(207,69,0,0.08)" stroke="#CF4500" stroke-width="1"/>
+  <text class="legend-text" x="60" y="1127" fill="#696969">核心业务数据表</text>
+
+  <rect x="220" y="1118" width="14" height="10" rx="2" fill="#ffffff" stroke="#141413" stroke-width="1.2"/>
+  <text class="legend-text" x="240" y="1127" fill="#696969">标准物理数据表</text>
+
+  <text class="legend-text" x="410" y="1127" fill="#141413" font-family="Consolas, 'Courier New', monospace">#</text>
+  <text class="legend-text" x="426" y="1127" fill="#696969">主键 (PK)</text>
+
+  <text class="legend-text" x="510" y="1127" fill="#141413" font-family="Consolas, 'Courier New', monospace">→</text>
+  <text class="legend-text" x="526" y="1127" fill="#696969">外键关联 (FK)</text>
+
+  <text class="legend-text" x="620" y="1127" fill="#696969" font-family="Consolas, 'Courier New', monospace" font-weight="bold">1 / N</text>
+  <text class="legend-text" x="660" y="1127" fill="#696969">一对多/零关联基数 (Cardinality)</text>
+
+</svg>

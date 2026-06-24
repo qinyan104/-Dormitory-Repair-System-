@@ -224,6 +224,7 @@ export interface AiClassifyResponse {
   impactScope: number
   confidence: number
   reason: string
+  suggestion?: string
   autoApplied: boolean
 }
 
