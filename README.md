@@ -179,11 +179,10 @@ dormitory-repair-frontend/
 
 ```bash
 # 1. 确保已安装 Docker Desktop
-# 2. 配置 AI 密钥（可选）
-#    编辑 .env 文件填入 DEEPSEEK_API_KEY=sk-你的key
-# 3. 设置 JWT 密钥（必需）
-#    编辑 .env 文件填入 JWT_SECRET=你的32位以上密钥
-# 4. 启动
+# 2. 配置环境变量（编辑 .env 文件）
+#    JWT_SECRET=你的32位以上密钥    ← 必需，否则后端拒绝启动
+#    DEEPSEEK_API_KEY=sk-你的key    ← 可选，AI 功能需要
+# 3. 启动
 docker compose up -d --build
 ```
 

@@ -1,4 +1,3 @@
-
 services:
   # 数据库服务
   db:
@@ -11,12 +10,15 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      # 自动执行初始化 SQL 脚本
+      - mysql_data:/var/lib/mysql
       - ./sql/dormitory_repair_init.sql:/docker-entrypoint-initdb.d/00_dormitory_repair_init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 10s
       retries: 10
+    networks:
+      - repair-network
 
   # Redis 缓存
   redis:
@@ -25,6 +27,15 @@ services:
     restart: always
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - repair-network
 
   # 后端服务
   backend:
@@ -41,13 +52,20 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root
       - SPRING_DATA_REDIS_HOST=redis
-      - JWT_SECRET=dormitory-repair-jwt-secret-key-please-change-it-in-production
+      - JWT_SECRET=${JWT_SECRET}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
     ports:
       - "8080:8080"
     volumes:
-      # 持久化上传的图片等文件
-      - ./uploads:/app/uploads
+      - uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - repair-network
 
   # 前端服务
   frontend:
@@ -58,3 +76,14 @@ services:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - repair-network
+
+volumes:
+  mysql_data:
+  redis_data:
+  uploads:
+
+networks:
+  repair-network:
+    driver: bridge
