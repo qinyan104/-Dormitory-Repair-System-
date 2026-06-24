@@ -45,6 +45,8 @@ const nlResult = ref<NaturalRepairResponse | null>(null)
 const nlError = ref('')
 const nlLoading = ref(false)
 
+const nlSubmitting = ref(false)
+
 const handleNaturalRepair = async () => {
   if (!naturalText.value.trim()) {
     nlError.value = '请输入报修描述'
@@ -54,7 +56,12 @@ const handleNaturalRepair = async () => {
   nlError.value = ''
   nlResult.value = null
   try {
-    nlResult.value = await aiNaturalRepairApi(naturalText.value)
+    const result = await aiNaturalRepairApi(naturalText.value)
+    if (!result) {
+      nlError.value = 'AI 暂未返回结果，请稍后重试'
+      return
+    }
+    nlResult.value = result
   } catch (e: any) {
     nlError.value = e?.message || 'AI 识别失败，请重试'
   } finally {
@@ -63,7 +70,8 @@ const handleNaturalRepair = async () => {
 }
 
 const applyNaturalResult = async () => {
-  if (!nlResult.value) return
+  if (!nlResult.value || nlSubmitting.value) return
+  nlSubmitting.value = true
   // Auto-fill the form with AI extracted data
   form.value.title = nlResult.value.repairType + (nlResult.value.description ? ' - ' + nlResult.value.description : '')
   form.value.categoryId = String(nlResult.value.categoryId || '')
@@ -81,13 +89,15 @@ const applyNaturalResult = async () => {
     impactScope: 5,
     confidence: nlResult.value.confidence || 0.5,
     reason: nlResult.value.reason || '',
+    suggestion: '',
     autoApplied: true
-  } as any
+  }
 
   // Switch to manual and submit
   repairMode.value = 'manual'
   await nextTick()
   handleSubmit()
+  nlSubmitting.value = false
 }
 
 const fetchCategories = async () => {
@@ -260,7 +270,7 @@ const handleSubmit = async () => {
               <div><span class="nl-label">置信度</span><span class="nl-value">{{ (nlResult.confidence * 100).toFixed(0) }}%</span></div>
             </div>
             <div class="nl-reason">{{ nlResult.reason }}</div>
-            <UiButton type="primary" @click="applyNaturalResult" style="width:100%;margin-top:12px">
+            <UiButton type="primary" :loading="nlSubmitting" @click="applyNaturalResult" style="width:100%;margin-top:12px">
               ✅ 确认并提交报修
             </UiButton>
           </div>

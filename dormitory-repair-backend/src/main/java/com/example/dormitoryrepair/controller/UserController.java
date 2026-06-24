@@ -88,6 +88,8 @@ public class UserController {
         user.setRoomNo(request.getRoomNo());
         user.setRole(request.getRole() != null ? request.getRole() : "STUDENT");
         user.setStatus(1);
+        user.setSkillType(request.getSkillType());
+        user.setServiceArea(request.getServiceArea());
         sysUserService.save(user);
         return ApiResponse.success("用户创建成功", null);
     }

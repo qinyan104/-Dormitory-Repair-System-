@@ -25,4 +25,6 @@ public class UserCreateRequest {
     private String roomNo;
     @Pattern(regexp = "^(STUDENT|ADMIN|REPAIRER)$", message = "角色只能是 STUDENT、ADMIN 或 REPAIRER")
     private String role;
+    private String skillType;
+    private String serviceArea;
 }

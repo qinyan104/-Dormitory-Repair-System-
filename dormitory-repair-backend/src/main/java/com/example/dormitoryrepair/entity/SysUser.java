@@ -25,8 +25,14 @@ public class SysUser implements Serializable {
     private String dormitoryBuilding;
     private String roomNo;
     private String avatar;
+    /** 角色：ADMIN / STUDENT / REPAIRER */
     private String role;
+    /** 状态：1=启用 0=禁用 */
     private Integer status;
+    /** 技能类型（维修人员）：逗号分隔，如"水电维修,空调维修" */
+    private String skillType;
+    /** 负责区域（维修人员）：逗号分隔，如"3号楼,5号楼" */
+    private String serviceArea;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

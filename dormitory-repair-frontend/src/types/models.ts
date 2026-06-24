@@ -21,6 +21,8 @@ export interface UserInfo {
   avatar?: string
   role: UserRole
   status?: UserStatus
+  skillType?: string
+  serviceArea?: string
 }
 
 export interface LoginRequest {

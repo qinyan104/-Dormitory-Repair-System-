@@ -134,6 +134,10 @@ watch(() => query.value.role, handleSearch)
                 <span :class="['role-tag', user.role === 'ADMIN' ? 'is-admin' : user.role === 'REPAIRER' ? 'is-repairer' : 'is-student']">
                   {{ user.role === 'ADMIN' ? '管理员' : user.role === 'REPAIRER' ? '维修人员' : '学生' }}
                 </span>
+                <div v-if="user.role === 'REPAIRER' && (user.skillType || user.serviceArea)" class="repairer-info">
+                  <div v-if="user.skillType" class="info-line">技能: {{ user.skillType }}</div>
+                  <div v-if="user.serviceArea" class="info-line">区域: {{ user.serviceArea }}</div>
+                </div>
               </td>
               <td>
                 <span :class="['status-dot', user.status === 1 ? 'is-active' : 'is-disabled']"></span>

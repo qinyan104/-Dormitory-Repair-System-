@@ -193,9 +193,17 @@ public class AutoAssignScheduler {
                 .ge(RepairOrder::getSubmitTime, sevenDaysAgo)
                 .in(RepairOrder::getRepairStatus, 1, 2, 3, 4, 5)
                 .list();
+        // 批量预加载用户信息避免 N+1
+        Map<Long, SysUser> userMap = new java.util.HashMap<>();
+        if (!recentOrders.isEmpty()) {
+            List<Long> uids = recentOrders.stream().map(RepairOrder::getUserId).filter(java.util.Objects::nonNull).distinct().toList();
+            if (!uids.isEmpty()) {
+                sysUserService.listByIds(uids).forEach(u -> userMap.put(u.getId(), u));
+            }
+        }
         Map<String, Long> dormCategoryCount = new java.util.HashMap<>();
         for (RepairOrder o : recentOrders) {
-            SysUser u = sysUserService.getById(o.getUserId());
+            SysUser u = userMap.get(o.getUserId());
             if (u != null && u.getDormitoryBuilding() != null && o.getCategoryId() != null) {
                 String key = u.getDormitoryBuilding() + "|" + u.getRoomNo() + "|" + o.getCategoryId();
                 dormCategoryCount.merge(key, 1L, Long::sum);
@@ -209,7 +217,7 @@ public class AutoAssignScheduler {
                             "repeat-fault-" + entry.getKey(),
                             null,
                             "🔁 重复故障提醒",
-                            entry.getValue() + "天内" + parts[0] + parts[1] + "已报修同类问题" + entry.getValue() + "次，建议排查。",
+                            "7天内" + parts[0] + parts[1] + "已报修同类问题" + entry.getValue() + "次，建议排查。",
                             null
                     );
                 }

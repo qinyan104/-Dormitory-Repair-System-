@@ -243,6 +243,18 @@ public class AiService {
                 }
             }
 
+            // Get order info for skill/area matching (reuse existing `order` variable)
+            String orderCategoryName = "";
+            String studentBuilding = "";
+            if (order.getCategoryId() != null) {
+                RepairCategory cat = categoryService.getById(order.getCategoryId());
+                if (cat != null) orderCategoryName = cat.getCategoryName();
+                if (order.getUserId() != null) {
+                    SysUser student = sysUserService.getById(order.getUserId());
+                    if (student != null) studentBuilding = student.getDormitoryBuilding() != null ? student.getDormitoryBuilding() : "";
+                }
+            }
+
             List<RecommendResponse.WorkerRanking> rankings = new ArrayList<>();
             for (SysUser w : workers) {
                 long categoryCount = categoryCountMap.getOrDefault(w.getId(), 0L);
@@ -256,21 +268,58 @@ public class AiService {
                 double avgScore = avgScoreMap.getOrDefault(w.getId(), 4.0);
                 double satisfaction = avgScore * 20.0;
 
-                int matchScore = (int) (skillMatch * 0.35 + workload * 0.25 + 50 * 0.25 + satisfaction * 0.15);
+                // 技能匹配（新）：检查工人技能类型是否匹配分类
+                double skillScore = 50.0;
+                if (w.getSkillType() != null && !w.getSkillType().isBlank() && !orderCategoryName.isEmpty()) {
+                    String[] skills = w.getSkillType().split(",");
+                    boolean matched = false;
+                    for (String s : skills) {
+                        if (s.trim().contains(orderCategoryName.replace("维修", "").trim())
+                                || orderCategoryName.contains(s.trim())) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    skillScore = matched ? 100.0 : 20.0;
+                }
+
+                // 区域匹配（新）：检查工人负责区域是否覆盖学生楼栋
+                double areaScore = 50.0;
+                if (w.getServiceArea() != null && !w.getServiceArea().isBlank() && !studentBuilding.isEmpty()) {
+                    String[] areas = w.getServiceArea().split(",");
+                    boolean matched = false;
+                    for (String a : areas) {
+                        if (a.trim().contains(studentBuilding) || studentBuilding.contains(a.trim())) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    areaScore = matched ? 100.0 : 20.0;
+                }
+
+                // 完成率
+                double completionRate = totalCompleted > 0 ? Math.min(100, totalCompleted * 10) : 50.0;
+
+                int matchScore = (int) (skillScore * 0.40 + workload * 0.25 + areaScore * 0.20 + completionRate * 0.15);
 
                 Map<String, Integer> breakdown = new LinkedHashMap<>();
-                breakdown.put("skillMatch", (int) skillMatch);
+                breakdown.put("skillMatch", (int) skillScore);
                 breakdown.put("workload", (int) workload);
-                breakdown.put("efficiency", 50);
-                breakdown.put("satisfaction", (int) satisfaction);
+                breakdown.put("areaMatch", (int) areaScore);
+                breakdown.put("completionRate", (int) completionRate);
+
+                String reason = String.format("技能匹配%s，%s，%s，完成率%s",
+                        skillScore >= 80 ? "较好" : "一般",
+                        currentLoad > 0 ? "当前" + currentLoad + "个待办" : "较空闲",
+                        areaScore >= 80 ? "区域匹配" : "区域不匹配",
+                        String.format("%.0f%%", completionRate));
 
                 RecommendResponse.WorkerRanking rank = new RecommendResponse.WorkerRanking();
                 rank.setWorkerId(w.getId());
                 rank.setWorkerName(w.getRealName());
                 rank.setMatchScore(matchScore);
                 rank.setBreakdown(breakdown);
-                rank.setReason(String.format("%d次此类维修经验，当前%d个待办，历史评分%.1f",
-                        categoryCount, currentLoad, avgScore));
+                rank.setReason(reason);
                 rankings.add(rank);
             }
 
