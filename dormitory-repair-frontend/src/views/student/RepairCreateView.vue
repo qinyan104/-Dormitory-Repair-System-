@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiSectionTitle from '../../components/ui/UiSectionTitle.vue'
 import UiInput from '../../components/ui/UiInput.vue'
@@ -12,8 +12,8 @@ import { uploadFileApi } from '../../api/file'
 import { updateUserProfileApi } from '../../api/user'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
-import { aiClassifyApi } from '../../api/ai'
-import type { AiClassifyResponse } from '../../types/models'
+import { aiClassifyApi, aiNaturalRepairApi } from '../../api/ai'
+import type { AiClassifyResponse, NaturalRepairResponse } from '../../types/models'
 
 const toast = useToast()
 
@@ -38,6 +38,57 @@ const fileInput = ref<HTMLInputElement | null>(null)
 const aiLoading = ref(false)
 const aiResult = ref<AiClassifyResponse | null>(null)
 const aiError = ref('')
+
+const repairMode = ref<'manual' | 'ai'>('manual')
+const naturalText = ref('')
+const nlResult = ref<NaturalRepairResponse | null>(null)
+const nlError = ref('')
+const nlLoading = ref(false)
+
+const handleNaturalRepair = async () => {
+  if (!naturalText.value.trim()) {
+    nlError.value = '请输入报修描述'
+    return
+  }
+  nlLoading.value = true
+  nlError.value = ''
+  nlResult.value = null
+  try {
+    nlResult.value = await aiNaturalRepairApi(naturalText.value)
+  } catch (e: any) {
+    nlError.value = e?.message || 'AI 识别失败，请重试'
+  } finally {
+    nlLoading.value = false
+  }
+}
+
+const applyNaturalResult = async () => {
+  if (!nlResult.value) return
+  // Auto-fill the form with AI extracted data
+  form.value.title = nlResult.value.repairType + (nlResult.value.description ? ' - ' + nlResult.value.description : '')
+  form.value.categoryId = String(nlResult.value.categoryId || '')
+  form.value.description = nlResult.value.description || naturalText.value
+  if (nlResult.value.building) form.value.dormitoryBuilding = nlResult.value.building
+  if (nlResult.value.room) form.value.roomNo = nlResult.value.room
+
+  // Set AI result for submit
+  aiResult.value = {
+    category: nlResult.value.categoryName || '',
+    categoryId: nlResult.value.categoryId || 0,
+    categoryName: nlResult.value.categoryName || '',
+    urgency: nlResult.value.urgencyLevel || '',
+    priorityScore: nlResult.value.priorityScore || 5,
+    impactScope: 5,
+    confidence: nlResult.value.confidence || 0.5,
+    reason: nlResult.value.reason || '',
+    autoApplied: true
+  } as any
+
+  // Switch to manual and submit
+  repairMode.value = 'manual'
+  await nextTick()
+  handleSubmit()
+}
 
 const fetchCategories = async () => {
   try {
@@ -177,6 +228,46 @@ const handleSubmit = async () => {
 
     <UiCard variant="white" padding="24px 32px" radius="lg" class="form-card" elevated>
       <form @submit.prevent="handleSubmit" class="repair-form">
+        <!-- 智能报修助手切换 -->
+        <div class="form-section switch-section">
+          <div class="mode-switch">
+            <button type="button" :class="['mode-btn', { active: repairMode === 'manual' }]" @click="repairMode = 'manual'">📝 手动填写</button>
+            <button type="button" :class="['mode-btn', { active: repairMode === 'ai' }]" @click="repairMode = 'ai'">🤖 智能报修</button>
+          </div>
+        </div>
+
+        <!-- 智能报修模式 -->
+        <div v-if="repairMode === 'ai'" class="form-section">
+          <label class="mc-label">一句话描述问题</label>
+          <textarea
+            v-model="naturalText"
+            class="mc-textarea"
+            placeholder="例如：3号楼502空调不制冷，晚上热得睡不着，帮我报修。"
+            rows="3"
+          ></textarea>
+          <div class="natural-actions">
+            <UiButton type="secondary" :loading="nlLoading" @click="handleNaturalRepair">🔍 AI 识别</UiButton>
+          </div>
+          <div v-if="nlError" class="ai-error" style="margin-top:8px">{{ nlError }}</div>
+          <div v-if="nlResult" class="nl-result-card">
+            <div class="ai-result-header">AI 提取结果</div>
+            <div class="nl-result-grid">
+              <div><span class="nl-label">楼栋</span><span class="nl-value">{{ nlResult.building || '未识别' }}</span></div>
+              <div><span class="nl-label">房号</span><span class="nl-value">{{ nlResult.room || '未识别' }}</span></div>
+              <div><span class="nl-label">故障类型</span><span class="nl-value">{{ nlResult.repairType || '未识别' }}</span></div>
+              <div><span class="nl-label">建议分类</span><span class="nl-value">{{ nlResult.categoryName || '未识别' }}</span></div>
+              <div><span class="nl-label">紧急程度</span><span class="nl-value">{{ nlResult.urgencyLevel || '未识别' }}</span></div>
+              <div><span class="nl-label">置信度</span><span class="nl-value">{{ (nlResult.confidence * 100).toFixed(0) }}%</span></div>
+            </div>
+            <div class="nl-reason">{{ nlResult.reason }}</div>
+            <UiButton type="primary" @click="applyNaturalResult" style="width:100%;margin-top:12px">
+              ✅ 确认并提交报修
+            </UiButton>
+          </div>
+        </div>
+
+        <!-- 手动填写模式 -->
+        <template v-if="repairMode === 'manual'">
         <div class="form-section">
           <UiInput
             v-model="form.title"
@@ -285,6 +376,7 @@ const handleSubmit = async () => {
           <UiButton type="secondary" @click="$router.back()" :disabled="loading">取消</UiButton>
           <UiButton type="primary" :loading="loading">提交报修单</UiButton>
         </div>
+      </template>
       </form>
     </UiCard>
   </div>
@@ -505,6 +597,19 @@ const handleSubmit = async () => {
   border-top: 1px solid var(--mc-hairline-soft);
   padding-top: 16px;
 }
+
+/* Natural repair mode styles */
+.switch-section { margin-bottom: 16px; }
+.mode-switch { display: flex; gap: 0; border: 1px solid var(--mc-hairline); border-radius: var(--mc-radius-md); overflow: hidden; }
+.mode-btn { flex: 1; padding: 10px 16px; border: none; background: var(--mc-white); font-size: 14px; cursor: pointer; transition: all 0.2s; color: var(--mc-muted); }
+.mode-btn.active { background: var(--mc-ink); color: var(--mc-on-dark); font-weight: 600; }
+.mode-btn:not(.active):hover { background: var(--mc-canvas); }
+.natural-actions { margin-top: 8px; }
+.nl-result-card { margin-top: 12px; padding: 16px; border-radius: var(--mc-radius-md); border: 1px solid var(--mc-success); background: var(--mc-canvas); animation: ai-fade-in 0.3s ease; }
+.nl-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.nl-label { font-size: 12px; color: var(--mc-muted); display: block; }
+.nl-value { font-size: 14px; font-weight: 600; color: var(--mc-ink); }
+.nl-reason { margin-top: 10px; font-size: 13px; color: var(--mc-muted); padding-top: 10px; border-top: 1px solid var(--mc-hairline-soft); }
 </style>
 
 

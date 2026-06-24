@@ -256,6 +256,19 @@ export interface EvaluationResponse {
   suggestion: string
 }
 
+export interface NaturalRepairResponse {
+  building: string
+  room: string
+  repairType: string
+  categoryId: number
+  categoryName: string
+  description: string
+  urgencyLevel: string
+  priorityScore: number
+  reason: string
+  confidence: number
+}
+
 export interface InsightRequest {
   timeRange: 'today' | 'this_week' | 'this_month'
   dimensions?: string[]

@@ -2,7 +2,8 @@ import http from './http'
 import type {
   AiClassifyRequest, AiClassifyResponse,
   AiRecommendResponse, EvaluationResponse,
-  InsightRequest, InsightResponse
+  InsightRequest, InsightResponse,
+  NaturalRepairResponse
 } from '../types/models'
 
 export const aiClassifyApi = (data: AiClassifyRequest) => {
@@ -19,4 +20,8 @@ export const aiEvaluateCompletionApi = (orderId: number) => {
 
 export const aiInsightsApi = (data: InsightRequest) => {
   return http.post<InsightResponse, InsightResponse>('/ai/insights', data)
+}
+
+export const aiNaturalRepairApi = (text: string) => {
+  return http.post<NaturalRepairResponse, NaturalRepairResponse>('/ai/natural-repair', { text })
 }
