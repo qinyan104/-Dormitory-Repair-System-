@@ -37,8 +37,8 @@ Treat `docs/superpowers/` as historical plans/specs. They are useful for backgro
 - User password change endpoint exists at `POST /api/user/change-password`.
 - Password minimum length: 6 characters (`@Size(min = 6)` on RegisterRequest, ChangePasswordRequest.newPassword, UserCreateRequest.password).
 - Three roles exist: `ADMIN`, `STUDENT`, `REPAIRER`.
-- 6-state repair order flow: 1待受理→2已派单→3维修中→4待确认→5已完成→6已取消. Transition validation added 2026-05-13 in `RepairOrderController.updateStatus` via `VALID_TRANSITIONS` map; illegal jumps (e.g. 1→5) rejected.
-- Redis is used for captcha storage only (5min TTL in `StringRedisTemplate`). Cache annotations (`@Cacheable`/`@CacheEvict`) were removed from all controllers on 2026-05-11 — no longer required for dev/CI.
+- 6-state repair order flow: 1待受理→2已派单→3维修中→4待确认→5已完成→6已取消. Transition validation defined in `RepairStatusEnum.VALID_TRANSITIONS`; used by `RepairOrderServiceImpl.updateStatusWithLock` and `validateTransition`; illegal jumps (e.g. 1→5) rejected.
+- Redis is used for captcha storage (5min TTL) and login rate limiting via `StringRedisTemplate`. Cache annotations (`@Cacheable`/`@CacheEvict`) were removed on 2026-05-11; `RedisConfig.cacheManager` bean removed on 2026-06-24 as dead code.
 - AOP operation logging via `@Log` annotation: saves async to `sys_operation_log` table.
 - WebSocket push via STOMP: notifications fire on create, assign, worker-accept, worker-complete, student-confirm.
 - Excel export via Apache POI: `GET /api/repair-order/export` returns .xlsx binary.
@@ -48,23 +48,25 @@ Treat `docs/superpowers/` as historical plans/specs. They are useful for backgro
 - **2026-05-11 Admin category page**: uses `GET /category/page` (not `/list`) — shows all statuses, paginated.
 - **2026-05-13 Tests verified**: 116 passing tests across controller, service, auth, and utility coverage.
 - **2026-06-19 Audited and Fixed**: 6 core architectural and performance issues resolved. 139 passing tests across all layers.
+- **2026-06-24 Code Quality & Security**: 146 passing tests. Core improvements: JWT secret now mandatory at startup; CORS tightened from wildcard to explicit origins; `@Transactional` scoped to write methods only; 4 missing exception handlers added; login rate-limit TTL enforced after increment; `DeepSeekClient` extracted from `AiService`; `RepairStatusEnum`/`UserRoleEnum` introduced with state machine; duplicated response fields removed; `RedisConfig.cacheManager` dead code eliminated; Vite vendor chunking added; 7 integration smoke tests added.
+- **2026-06-24 Production Hardening**: Health check enhanced with real DB/Redis probes + liveness/readiness endpoints; structured JSON logging via logback-spring.xml; Swagger UI at `/swagger-ui/index.html`; 7 security response headers (CSP/HSTS/X-Frame-Options etc.) via `SecurityHeaderFilter`; user soft-delete (status=0) instead of physical removal; idempotency key support on repair order creation; `X-Trace-Id` request tracing via `TraceIdFilter`; CI workflow, CHANGELOG, and commit convention established.
 
 ## Visual Components (2026-05-13)
 
 - `UiStarDisplay` at `src/components/ui/UiStarDisplay.vue` — graphical 5-star rating with interactive mood emojis.
 - `UiTimeline` at `src/components/ui/UiTimeline.vue` — vertical visual process timeline for order tracking.
-- **Mobile adaptation removed on 2026-05-13.** The bottom tab bar (UiMobileTabBar) and all `@media (max-width: 767px)` responsive CSS were deleted. Decision: mobile adaptation is not a priority for a backend-focused course project; effort redirected to backend logic and testing.
+- **Mobile adaptation (2026-05-13).** Responsive web adaptation (`@media` breakpoints) was removed to prioritize backend logic. **Capacitor Android APP is fully functional** — independent mobile layouts (`StudentMobileLayout`, `WorkerMobileLayout`) and views (`MobileHomeView`, `MobileRepairCreateView`, `MobileDashboardView`, `MobileOrdersView`) remain active for APK builds via `npx cap sync android`.
 
 ## AI Integration (2026-05-13)
 
 - **AI endpoints**: `POST /api/ai/classify` (title+description → category+urgency+reason), `GET /api/ai/recommend-worker?orderId=` (→ workerId+reason+confidence).
-- **DeepSeek API**: Called via `AiService` using `RestTemplate` (15s read timeout). Config in `application.yml` under `app.ai`. API key read from env `DEEPSEEK_API_KEY` (via `.env` file, gitignored).
+- **DeepSeek API**: Called via `DeepSeekClient` component (extracted 2026-06-24) which handles HTTP transport, JSON extraction, and prompt-injection sanitization. Config in `application.yml` under `app.ai`. API key read from env `DEEPSEEK_API_KEY` (via `.env` file, gitignored).
 - **Frontend AI layer**: `src/api/ai.ts` — `aiClassifyApi()`, `aiRecommendWorkerApi()` wrappers.
 - **Student side**: `RepairCreateView.vue` — "🤖 AI 智能分析" button. Student sees only suggested category; urgency level is hidden to prevent manipulation.
 - **Admin side**: `RepairManageView.vue` — auto-fetched AI recommendation card (worker name + reason + confidence badge) in the assign slide-over panel.
 - **ApiResponse wrapper**: All AI controller responses use `ApiResponse.success(result)` — required because the frontend http.ts interceptor strips the wrapper and returns `res.data`. Returning raw objects causes silent failures.
 - **Error handling**: AI failures return null → frontend shows "AI 暂不可用" or hides the recommendation card. Core repair flow is never blocked.
-- **Tests**: 7 new (AiServiceTest 3, AiControllerTest 4). Project total: 116 (all green as of 2026-05-13).
+- **Tests**: 7 new (AiServiceTest 3, AiControllerTest 4). Project total: 116 (all green as of 2026-05-13). As of 2026-06-24: 146 tests total (139 backend + 7 smoke tests).
 
 ## Verification
 
@@ -73,7 +75,7 @@ Treat `docs/superpowers/` as historical plans/specs. They are useful for backgro
 - Backend compile: `mvn compile` with `JAVA_HOME=D:\code_tools\JDK17`
 - AI test subset: `mvn test -Dtest="AiServiceTest,AiControllerTest" -DfailIfNoTests=false`
 
-Frontend verified on `2026-06-19` (build pass, mobile navigation and WebSocket connection state sharing fixed). Backend verified on `2026-06-19` (139 tests green, audit logs DB schema resolved, O(N*M) recommend query optimized, Jackson null-safety added, controller actions transactionalized).
+Frontend verified on `2026-06-24` (build pass, vendor chunking active). Backend verified on `2026-06-24` (146 tests green, JWT/cors/transactional security hardening, RedisConfig dead code removed, AiService decomposed, enum types introduced, health-probe/structured-logging/Swagger/security-headers/idempotency/traceId production hardening).
 
 
 <claude-mem-context>

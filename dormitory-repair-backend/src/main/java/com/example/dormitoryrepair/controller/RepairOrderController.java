@@ -10,6 +10,7 @@ import com.example.dormitoryrepair.common.result.ApiResponse;
 import com.example.dormitoryrepair.common.result.ResultCode;
 import com.example.dormitoryrepair.common.util.DateTimeRangeParser;
 import com.example.dormitoryrepair.common.util.ExcelExportUtil;
+import com.example.dormitoryrepair.common.util.IdempotencyHelper;
 import com.example.dormitoryrepair.dto.repair.RepairOrderCreateRequest;
 import com.example.dormitoryrepair.dto.repair.RepairOrderQueryRequest;
 import com.example.dormitoryrepair.dto.repair.RepairOrderStatusRequest;
@@ -62,7 +63,6 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/repair-order")
 @RequiredArgsConstructor
-@Transactional
 public class RepairOrderController {
 
     private final RepairOrderService repairOrderService;
@@ -71,15 +71,19 @@ public class RepairOrderController {
     private final SimpMessagingTemplate messagingTemplate;
     private final NotificationService notificationService;
     private final AiService aiService;
+    private final IdempotencyHelper idempotencyHelper;
 
     @Value("${app.ai.completion-review.enabled:true}")
     private boolean completionReviewEnabled;
 
     // ==================== 学生端 ====================
 
+    @Transactional
     @Log(type = "REPAIR", value = "学生提交报修")
 @PostMapping
-    public ApiResponse<RepairOrder> create(@Valid @RequestBody RepairOrderCreateRequest request) {
+    public ApiResponse<RepairOrder> create(@Valid @RequestBody RepairOrderCreateRequest request,
+                                           @org.springframework.web.bind.annotation.RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey) {
+        idempotencyHelper.claim(idempotencyKey, "报修提交");
         Long userId = AuthContext.getUserId();
         RepairCategory category = repairCategoryService.getById(request.getCategoryId());
         if (category == null || Objects.equals(category.getStatus(), 0)) {
@@ -125,6 +129,7 @@ public class RepairOrderController {
         return ApiResponse.success(data);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "撤销报修")
 @PutMapping("/cancel/{id}")
     public ApiResponse<Void> cancel(@PathVariable Long id) {
@@ -144,6 +149,7 @@ public class RepairOrderController {
         return ApiResponse.success("撤销成功", null);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "学生确认完成")
 @PutMapping("/student-confirm/{id}")
     public ApiResponse<Void> studentConfirm(@PathVariable Long id) {
@@ -187,6 +193,7 @@ public class RepairOrderController {
         return ApiResponse.success(data);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "管理员受理报修")
 @PutMapping("/accept/{id}")
     public ApiResponse<Map<String, Object>> accept(@PathVariable Long id) {
@@ -232,6 +239,7 @@ public class RepairOrderController {
         return ApiResponse.success("受理成功", result);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "管理员指派维修")
 @PutMapping("/assign/{id}")
     public ApiResponse<Void> assign(@PathVariable Long id, @RequestBody Map<String, Long> body) {
@@ -265,6 +273,7 @@ public class RepairOrderController {
         return ApiResponse.success("指派成功", null);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "更新报修状态")
 @PutMapping("/status/{id}")
     public ApiResponse<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody RepairOrderStatusRequest request) {
@@ -283,6 +292,7 @@ public class RepairOrderController {
         return ApiResponse.success("状态更新成功", null);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "删除报修")
 @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
@@ -333,7 +343,7 @@ public class RepairOrderController {
                     order.getTitle(),
                     order.getContent(),
                     category != null ? category.getCategoryName() : "",
-                    statusLabel(order.getRepairStatus()),
+                    com.example.dormitoryrepair.common.enums.RepairStatusEnum.statusLabel(order.getRepairStatus()),
                     student != null ? student.getRealName() : "",
                     student != null ? student.getStudentNo() : "",
                     student != null ? student.getPhone() : "",
@@ -381,6 +391,7 @@ public class RepairOrderController {
         return ApiResponse.success(data);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "维修人员接单")
 @PutMapping("/worker-accept/{id}")
     public ApiResponse<Void> workerAccept(@PathVariable Long id) {
@@ -405,6 +416,7 @@ public class RepairOrderController {
         return ApiResponse.success("接单成功", null);
     }
 
+    @Transactional
     @Log(type = "REPAIR", value = "维修人员完成")
 @PutMapping("/worker-complete/{id}")
     public ApiResponse<Void> workerComplete(@PathVariable Long id, @RequestBody Map<String, String> body) {
@@ -525,18 +537,6 @@ public class RepairOrderController {
         }
     }
 
-    private String statusLabel(int status) {
-        return switch (status) {
-            case 1 -> "待受理";
-            case 2 -> "已派单";
-            case 3 -> "维修中";
-            case 4 -> "待确认";
-            case 5 -> "已完成";
-            case 6 -> "已取消";
-            default -> "未知";
-        };
-    }
-
     private LambdaQueryWrapper<RepairOrder> buildWrapper(RepairOrderQueryRequest request) {
         LambdaQueryWrapper<RepairOrder> wrapper = new LambdaQueryWrapper<>();
         if (request.getCategoryId() != null) {
@@ -599,7 +599,6 @@ public class RepairOrderController {
         view.put("workerId", order.getWorkerId());
         view.put("title", order.getTitle());
         view.put("content", order.getContent());
-        view.put("description", order.getContent());
         view.put("imageUrl", order.getImageUrl());
         view.put("repairStatus", order.getRepairStatus());
         view.put("submitTime", order.getSubmitTime());
@@ -612,7 +611,6 @@ public class RepairOrderController {
         view.put("studentConfirmTime", order.getStudentConfirmTime());
         view.put("cancelTime", order.getCancelTime());
         view.put("remark", order.getRemark());
-        view.put("processRemark", order.getRemark());
         view.put("createTime", order.getCreateTime());
         view.put("updateTime", order.getUpdateTime());
 

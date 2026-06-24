@@ -93,36 +93,39 @@ onMounted(() => {
       </div>
 
       <div class="feedback-form">
-        <div class="rating-section">
-          <label class="mc-label">服务评分</label>
-          <div class="stars">
-            <span
-              v-for="star in 5"
-              :key="star"
-              class="star"
-              :class="{ 'is-active': star <= feedback.score }"
-              @click="feedback.score = star"
-            >
-              ⭐
-            </span>
+        <form @submit.prevent="handleSubmit">
+          <div class="rating-section">
+            <label class="mc-label">服务评分</label>
+            <div class="stars">
+              <span
+                v-for="star in 5"
+                :key="star"
+                class="star"
+                :class="{ 'is-active': star <= feedback.score }"
+                @click="feedback.score = star"
+              >
+                ⭐
+              </span>
+            </div>
+            <p class="rating-hint">{{ ratingHints[feedback.score - 1] }}</p>
           </div>
-          <p class="rating-hint">{{ ratingHints[feedback.score - 1] }}</p>
-        </div>
 
-        <div class="content-section">
-          <label class="mc-label">评价内容</label>
-          <textarea
-            v-model="feedback.content"
-            class="mc-textarea"
-            placeholder="请分享你的维修体验，帮助我们继续改进服务。"
-            rows="5"
-          ></textarea>
-        </div>
+          <div class="content-section">
+            <label class="mc-label" for="feedback-content">评价内容</label>
+            <textarea
+              id="feedback-content"
+              v-model="feedback.content"
+              class="mc-textarea"
+              placeholder="请分享你的维修体验，帮助我们继续改进服务。"
+              rows="5"
+            ></textarea>
+          </div>
 
-        <div class="form-actions">
-          <UiButton type="secondary" @click="router.back()">以后再说</UiButton>
-          <UiButton type="primary" :loading="submitting" @click="handleSubmit">提交评价</UiButton>
-        </div>
+          <div class="form-actions">
+            <UiButton type="secondary" @click="router.back()">以后再说</UiButton>
+            <UiButton type="primary" :loading="submitting" html-type="submit">提交评价</UiButton>
+          </div>
+        </form>
       </div>
     </UiCard>
   </div>

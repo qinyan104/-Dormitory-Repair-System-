@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import UiInput from '../../components/ui/UiInput.vue'
 import UiButton from '../../components/ui/UiButton.vue'
 import UiSelect from '../../components/ui/UiSelect.vue'
 import UiAuthShell from '../../components/ui/UiAuthShell.vue'
+import ServerConfigModal from '../../components/ui/ServerConfigModal.vue'
 import { registerApi, getCaptchaApi } from '../../api/auth'
 import { useToast } from '../../composables/useToast'
+import { isNativeApp, getSavedServerAddress } from '../../utils/serverConfig'
 
 const toast = useToast()
 const router = useRouter()
@@ -26,6 +28,14 @@ const errors = ref<Record<string, string>>({})
 const captchaKey = ref('')
 const captchaCode = ref('')
 const captchaImage = ref('')
+const captchaError = ref('')
+const showServerConfig = ref(false)
+
+onMounted(() => {
+  if (isNativeApp() && !getSavedServerAddress()) {
+    showServerConfig.value = true
+  }
+})
 
 const setupSteps = [
   {
@@ -52,10 +62,16 @@ const genderOptions = [
 
 const fetchCaptcha = async () => {
   try {
+    captchaError.value = ''
+    captchaImage.value = ''
     const d: any = await getCaptchaApi()
     captchaKey.value = d.captchaKey
     captchaImage.value = d.captchaImage
-  } catch {}
+  } catch (e: any) {
+    console.error('[captcha] 验证码加载失败:', e)
+    const detail = e?.message || e?.code || String(e)
+    captchaError.value = '验证码加载失败: ' + detail
+  }
 }
 
 fetchCaptcha()
@@ -187,7 +203,7 @@ const handleRegister = async () => {
 
         <div class="captcha-box" @click="fetchCaptcha" title="点击刷新验证码">
           <img v-if="captchaImage" :src="captchaImage" alt="验证码图片" class="captcha-img" />
-          <span v-else class="captcha-dummy">加载中</span>
+          <span v-else class="captcha-dummy">{{ captchaError || '加载中' }}</span>
         </div>
       </div>
 
@@ -196,6 +212,44 @@ const handleRegister = async () => {
       </p>
 
       <UiButton type="primary" :loading="loading" class="submit-btn">创建账号</UiButton>
+      <p class="auth-form-note" style="margin-top:12px;text-align:center">
+        维修人员请联系管理员创建账号
+      </p>
     </form>
+
+    <button
+      v-if="isNativeApp()"
+      class="server-config-btn"
+      @click="showServerConfig = true"
+      title="设置服务器地址"
+    >
+      ⚙️ 服务器设置
+    </button>
+
+    <ServerConfigModal
+      :visible="showServerConfig"
+      @close="showServerConfig = false"
+      @saved="fetchCaptcha"
+    />
   </UiAuthShell>
 </template>
+
+<style scoped>
+.server-config-btn {
+  display: block;
+  margin: 16px auto 0;
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid var(--mc-hairline);
+  border-radius: var(--mc-radius-sm);
+  color: var(--mc-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color var(--mc-transition), border-color var(--mc-transition);
+}
+
+.server-config-btn:hover {
+  color: var(--mc-ink);
+  border-color: var(--mc-muted);
+}
+</style>

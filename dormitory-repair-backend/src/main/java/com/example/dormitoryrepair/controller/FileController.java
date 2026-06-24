@@ -34,10 +34,11 @@ public class FileController {
     private String uploadDir;
 
     @PostMapping("/upload")
-    public ApiResponse<Map<String, String>> upload(@RequestParam("file") MultipartFile file) throws IOException {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "上传文件不能为空");
-        }
+    public ApiResponse<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
+        try {
+            if (file == null || file.isEmpty()) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "上传文件不能为空");
+            }
         String originalFilename = file.getOriginalFilename();
         if (!StringUtils.hasText(originalFilename)) {
             throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "文件名不能为空");
@@ -68,5 +69,8 @@ public class FileController {
         result.put("originalFilename", originalFilename);
         result.put("contentType", file.getContentType());
         return ApiResponse.success(result);
+    } catch (IOException e) {
+        throw new BusinessException(ResultCode.ERROR.getCode(), "文件上传失败: " + e.getMessage());
     }
+}
 }

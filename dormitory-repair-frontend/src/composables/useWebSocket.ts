@@ -4,6 +4,7 @@ import SockJS from 'sockjs-client'
 import { useAuthStore } from '../stores/auth'
 import { useToast } from './useToast'
 import { useNotification } from './useNotification'
+import { getWsUrl } from '../utils/serverConfig'
 
 let client: Client | null = null
 const connected = ref(false)
@@ -22,7 +23,7 @@ export function useWebSocket() {
 
     client = new Client({
       // @ts-ignore
-      webSocketFactory: () => new SockJS('/ws', null, { transports: ['websocket', 'xhr-streaming', 'xhr-polling'] }),
+      webSocketFactory: () => new SockJS(getWsUrl(), null, { transports: ['websocket', 'xhr-streaming', 'xhr-polling'] }),
       connectHeaders: {
         Authorization: 'Bearer ' + authStore.token
       },

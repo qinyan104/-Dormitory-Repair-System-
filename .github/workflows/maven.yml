@@ -1,0 +1,42 @@
+name: Maven CI
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**', 'fix/**' ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.gitignore'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        java: [17]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build and test backend
+        working-directory: ./dormitory-repair-backend
+        run: mvn verify --no-transfer-progress
+        env:
+          JWT_SECRET: ci-jwt-secret-at-least-32-characters-for-testing
+
+      - name: Build frontend
+        working-directory: ./dormitory-repair-frontend
+        run: |
+          npm ci
+          npm run build

@@ -8,6 +8,7 @@ import com.example.dormitoryrepair.common.result.ApiResponse;
 import com.example.dormitoryrepair.common.result.ResultCode;
 import com.example.dormitoryrepair.common.util.IpUtil;
 import com.example.dormitoryrepair.dto.auth.CaptchaResponse;
+import com.example.dormitoryrepair.dto.auth.ForgotPasswordRequest;
 import com.example.dormitoryrepair.dto.auth.LoginRequest;
 import com.example.dormitoryrepair.dto.auth.RegisterRequest;
 import com.example.dormitoryrepair.entity.SysUser;
@@ -84,6 +85,8 @@ public class AuthController {
             count = 1L;
         } else {
             count = stringRedisTemplate.opsForValue().increment(limitKey);
+            // Ensure TTL is always applied, even after increment
+            stringRedisTemplate.expire(limitKey, Duration.ofSeconds(60));
         }
         if (count != null && count > LOGIN_RATE_LIMIT) {
             throw new BusinessException(429, "登录尝试过于频繁，请稍后再试");
@@ -130,6 +133,25 @@ public class AuthController {
     @PostMapping("/logout")
     public ApiResponse<Void> logout() {
         return ApiResponse.success("退出成功", null);
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        verifyCaptcha(request.getCaptchaKey(), request.getCaptchaCode());
+
+        SysUser user = sysUserService.getOne(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUsername, request.getUsername())
+                .last("limit 1"));
+        if (user == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "用户不存在");
+        }
+        if (user.getStudentNo() == null || !user.getStudentNo().equals(request.getStudentNo())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "学号验证失败");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        sysUserService.updateById(user);
+        return ApiResponse.success("密码重置成功，请使用新密码登录", null);
     }
 
     private void verifyCaptcha(String captchaKey, String captchaCode) {

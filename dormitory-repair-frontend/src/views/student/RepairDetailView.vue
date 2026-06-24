@@ -12,6 +12,7 @@ import { normalizeRepairOrder } from '../../utils/repair'
 import { REPAIR_STATUS_MAP } from '../../constants/repair'
 import { useToast } from '../../composables/useToast'
 import { useConfirm } from '../../composables/useConfirm'
+import { repairFeedbackPath } from '../../utils/device'
 
 const toast = useToast()
 const { confirm } = useConfirm()
@@ -88,7 +89,7 @@ const timelineEvents = computed(() => {
       label: '维修完成',
       time: order.value.workerCompleteTime,
       status: 'success' as const,
-      description: order.value.processRemark || '维修任务已处理完毕，请核地'
+      description: order.value.processRemark || '维修任务已处理完毕，请核实'
     })
   }
 
@@ -271,7 +272,7 @@ onMounted(() => {
               v-if="order.repairStatus === 5"
               type="primary"
               class="full-width"
-              @click="$router.push(`/student/repair/feedback/${order.id}`)"
+              @click="$router.push(repairFeedbackPath(order.id))"
             >
               评价工单
             </UiButton>
@@ -514,6 +515,33 @@ onMounted(() => {
   animation: rotation 1s linear infinite;
 }
 
+@media (max-width: 768px) {
+  .detail-content {
+    grid-template-columns: 1fr;
+  }
+  .detail-title {
+    font-size: 22px;
+  }
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .detail-image {
+    width: 100px;
+    height: 100px;
+  }
+  .image-gallery {
+    gap: 8px;
+  }
+  .info-card,
+  .feedback-display-card,
+  .remark-card {
+    padding: 20px 16px !important;
+  }
+  .action-card {
+    padding: 20px 16px !important;
+  }
+}
 </style>
 
 

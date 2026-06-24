@@ -5,7 +5,7 @@ const USER_STORAGE_KEY = 'user'
 const TOKEN_STORAGE_KEY = 'token'
 
 const loadStoredUser = (): UserInfo | null => {
-  const rawUser = sessionStorage.getItem(USER_STORAGE_KEY)
+  const rawUser = localStorage.getItem(USER_STORAGE_KEY)
 
   if (!rawUser) {
     return null
@@ -14,7 +14,7 @@ const loadStoredUser = (): UserInfo | null => {
   try {
     return JSON.parse(rawUser) as UserInfo
   } catch {
-    sessionStorage.removeItem(USER_STORAGE_KEY)
+    localStorage.removeItem(USER_STORAGE_KEY)
     return null
   }
 }
@@ -22,7 +22,7 @@ const loadStoredUser = (): UserInfo | null => {
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: loadStoredUser(),
-    token: sessionStorage.getItem(TOKEN_STORAGE_KEY) || ''
+    token: localStorage.getItem(TOKEN_STORAGE_KEY) || ''
   }),
   getters: {
     isLoggedIn: (state) => !!state.token,
@@ -31,17 +31,17 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     setToken(token: string) {
       this.token = token
-      sessionStorage.setItem(TOKEN_STORAGE_KEY, token)
+      localStorage.setItem(TOKEN_STORAGE_KEY, token)
     },
     setUser(user: UserInfo) {
       this.user = user
-      sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user))
     },
     logout() {
       this.token = ''
       this.user = null
-      sessionStorage.removeItem(TOKEN_STORAGE_KEY)
-      sessionStorage.removeItem(USER_STORAGE_KEY)
+      localStorage.removeItem(TOKEN_STORAGE_KEY)
+      localStorage.removeItem(USER_STORAGE_KEY)
     }
   }
 })

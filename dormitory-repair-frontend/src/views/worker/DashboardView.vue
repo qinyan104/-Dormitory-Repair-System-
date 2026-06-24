@@ -4,6 +4,9 @@ import UiCard from '../../components/ui/UiCard.vue'
 import UiSectionTitle from '../../components/ui/UiSectionTitle.vue'
 import { getWorkerOrdersApi } from '../../api/repair'
 import { REPAIR_STATUS_MAP } from '../../constants/repair'
+import { useToast } from '../../composables/useToast'
+
+const toast = useToast()
 
 const stats = ref({
   assigned: 0,
@@ -25,7 +28,9 @@ const fetchData = async () => {
     stats.value.repairing = (orders as any[]).filter((o: any) => o.repairStatus === 3).length
     stats.value.waitingConfirm = (orders as any[]).filter((o: any) => o.repairStatus === 4).length
     stats.value.completedToday = (orders as any[]).filter((o: any) => o.repairStatus === 5 && o.studentConfirmTime?.startsWith(today)).length
-  } catch { /* handled by interceptor */ }
+  } catch {
+    toast.error('加载数据失败，请下拉刷新重试')
+  }
 }
 
 onMounted(fetchData)

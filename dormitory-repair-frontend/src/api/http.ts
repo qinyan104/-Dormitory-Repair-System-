@@ -1,10 +1,11 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import { useAuthStore } from '../stores/auth'
+import { getApiBaseUrl } from '../utils/serverConfig'
 import router from '../router'
 
 const http: AxiosInstance = axios.create({
-  baseURL: '/api',
-  timeout: 10000,
+  baseURL: getApiBaseUrl(),
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -15,6 +16,8 @@ let isRedirecting = false
 // Request Interceptor: Inject Token
 http.interceptors.request.use(
   (config) => {
+    // Dynamically resolve base URL so server address changes take effect immediately
+    config.baseURL = getApiBaseUrl()
     const authStore = useAuthStore()
     if (authStore.token) {
       config.headers.Authorization = `Bearer ${authStore.token}`

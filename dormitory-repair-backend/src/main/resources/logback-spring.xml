@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console JSON appender (for production / container environments) -->
+    <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>
+                {"timestamp":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}","level":"%level","logger":"%logger{36}","traceId":"%X{traceId:-}","thread":"%thread","message":"%replace(%msg){'\n'}{'\\n'}","exception":"%replace(%ex){'\n'}{'\\n'}"}%n
+            </pattern>
+        </encoder>
+    </appender>
+
+    <!-- Human-readable console appender (for local development) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{traceId:-}] — %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Spring profile-based selection: JSON for prod/docker, CONSOLE for dev -->
+    <springProfile name="default,dev,test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod,docker">
+        <root level="INFO">
+            <appender-ref ref="JSON"/>
+        </root>
+    </springProfile>
+
+    <!-- Keep third-party logs quieter -->
+    <logger name="org.springframework" level="WARN"/>
+    <logger name="com.baomidou" level="WARN"/>
+    <logger name="org.apache" level="WARN"/>
+</configuration>

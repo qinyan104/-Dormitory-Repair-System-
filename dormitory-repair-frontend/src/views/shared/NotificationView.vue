@@ -13,6 +13,7 @@ import { useToast } from '../../composables/useToast'
 import { useNotification } from '../../composables/useNotification'
 import { useAuthStore } from '../../stores/auth'
 import { getPageRecords } from '../../utils/page'
+import { repairDetailPath, workerOrderDetailPath } from '../../utils/device'
 
 const router = useRouter()
 const toast = useToast()
@@ -49,9 +50,9 @@ const handleRead = async (item: any) => {
   if (item.orderId) {
     const role = authStore.user?.role || 'STUDENT'
     if (role === 'STUDENT') {
-      router.push(`/student/repair/detail/${item.orderId}`)
+      router.push(repairDetailPath(item.orderId))
     } else if (role === 'REPAIRER') {
-      router.push(`/repairer/orders/${item.orderId}`)
+      router.push(workerOrderDetailPath(item.orderId))
     } else if (role === 'ADMIN') {
       router.push(`/admin/repairs?orderId=${item.orderId}`)
     }
@@ -223,5 +224,29 @@ onMounted(fetchNotifications)
 .current {
   font-weight: 500;
   color: var(--mc-ink);
+}
+
+@media (max-width: 768px) {
+  .header-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  .header-row :deep(.mc-button) {
+    align-self: flex-end;
+  }
+  .notification-item {
+    padding: 14px 16px;
+  }
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    text-align: center;
+    padding: 12px 16px;
+  }
+  .page-btns {
+    justify-content: center;
+  }
 }
 </style>

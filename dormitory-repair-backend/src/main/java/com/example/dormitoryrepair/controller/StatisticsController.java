@@ -89,7 +89,7 @@ public class StatisticsController {
             }
             Map<String, Object> item = new HashMap<>();
             item.put("status", status);
-            item.put("label", statusLabel(status));
+            item.put("label", com.example.dormitoryrepair.common.enums.RepairStatusEnum.statusLabel(status));
             item.put("count", count);
             result.add(item);
         }
@@ -98,18 +98,6 @@ public class StatisticsController {
 
     private LambdaQueryWrapper<RepairOrder> statusWrapper(int status) {
         return new LambdaQueryWrapper<RepairOrder>().eq(RepairOrder::getRepairStatus, status);
-    }
-
-    private String statusLabel(int status) {
-        return switch (status) {
-            case 1 -> "待受理";
-            case 2 -> "已派单";
-            case 3 -> "维修中";
-            case 4 -> "待确认";
-            case 5 -> "已完成";
-            case 6 -> "已取消";
-            default -> "未知";
-        };
     }
 
     private void ensureAdmin() {

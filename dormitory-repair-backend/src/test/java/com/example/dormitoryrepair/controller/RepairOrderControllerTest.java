@@ -3,6 +3,7 @@ package com.example.dormitoryrepair.controller;
 import com.example.dormitoryrepair.common.auth.AuthContext;
 import com.example.dormitoryrepair.common.exception.BusinessException;
 import com.example.dormitoryrepair.common.result.ResultCode;
+import com.example.dormitoryrepair.common.util.IdempotencyHelper;
 import com.example.dormitoryrepair.dto.ai.RecommendResponse;
 import com.example.dormitoryrepair.dto.repair.RepairOrderCreateRequest;
 import com.example.dormitoryrepair.dto.repair.RepairOrderQueryRequest;
@@ -55,11 +56,14 @@ class RepairOrderControllerTest {
     @Mock
     private AiService aiService;
 
+    @Mock
+    private IdempotencyHelper idempotencyHelper;
+
     private RepairOrderController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new RepairOrderController(repairOrderService, repairCategoryService, sysUserService, messagingTemplate, notificationService, aiService);
+        controller = new RepairOrderController(repairOrderService, repairCategoryService, sysUserService, messagingTemplate, notificationService, aiService, idempotencyHelper);
         AuthContext.setUserId(1L);
         AuthContext.setRole("STUDENT");
         // Default mocks for batch loading (used by buildOrderViews)
@@ -100,7 +104,7 @@ class RepairOrderControllerTest {
         request.setContent("水龙头关不严");
         request.setUrgency("紧急");
 
-        var result = controller.create(request);
+        var result = controller.create(request, null);
 
         assertNotNull(result.getData().getOrderNo());
         assertEquals(1, result.getData().getRepairStatus());
@@ -123,7 +127,7 @@ class RepairOrderControllerTest {
         request.setAiPriorityScore(9);
         request.setAiImpactScope(8);
 
-        controller.create(request);
+        controller.create(request, null);
 
         ArgumentCaptor<RepairOrder> captor = ArgumentCaptor.forClass(RepairOrder.class);
         verify(repairOrderService).save(captor.capture());
@@ -144,7 +148,7 @@ class RepairOrderControllerTest {
         request.setTitle("门锁坏了");
         request.setContent("钥匙拧不动");
 
-        var result = controller.create(request);
+        var result = controller.create(request, null);
 
         assertNull(result.getData().getUrgency());
     }
@@ -159,7 +163,7 @@ class RepairOrderControllerTest {
         RepairOrderCreateRequest request = new RepairOrderCreateRequest();
         request.setCategoryId(1L);
 
-        assertThrows(BusinessException.class, () -> controller.create(request));
+        assertThrows(BusinessException.class, () -> controller.create(request, null));
     }
 
     @Test
@@ -169,7 +173,7 @@ class RepairOrderControllerTest {
         RepairOrderCreateRequest request = new RepairOrderCreateRequest();
         request.setCategoryId(999L);
 
-        assertThrows(BusinessException.class, () -> controller.create(request));
+        assertThrows(BusinessException.class, () -> controller.create(request, null));
     }
 
     // ==================== myPage ====================

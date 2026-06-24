@@ -1,12 +1,18 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
+import { Capacitor } from '@capacitor/core'
 import LoginView from '../views/auth/LoginView.vue'
 import RegisterView from '../views/auth/RegisterView.vue'
 
+import { isMobileDevice } from '../utils/device'
 import { useAuthStore } from '../stores/auth'
 import { useToast } from '../composables/useToast'
 
+const isNative = Capacitor.isNativePlatform()
+
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: isNative
+    ? createWebHashHistory()
+    : createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
@@ -32,7 +38,9 @@ const router = createRouter({
       path: '/student',
       component: () => import('../layouts/StudentLayout.vue'),
       meta: { requiresAuth: true, role: 'STUDENT' },
+      beforeEnter: () => { if (isMobileDevice()) return '/student/m' },
       children: [
+        { path: '', redirect: '/student/home' },
         {
           path: 'home',
           name: 'student-home',
@@ -77,11 +85,65 @@ const router = createRouter({
         }
       ]
     },
+    // Student mobile routes
+    {
+      path: '/student/m',
+      component: () => import('../layouts/StudentMobileLayout.vue'),
+      meta: { requiresAuth: true, role: 'STUDENT' },
+      beforeEnter: () => { if (!isMobileDevice()) return '/student' },
+      children: [
+        { path: '', redirect: '/student/m/home' },
+        {
+          path: 'home',
+          name: 'student-mobile-home',
+          component: () => import('../views/student/mobile/MobileHomeView.vue'),
+          meta: { title: '首页' }
+        },
+        {
+          path: 'create',
+          name: 'student-mobile-create',
+          component: () => import('../views/student/mobile/MobileRepairCreateView.vue'),
+          meta: { title: '我要报修' }
+        },
+        {
+          path: 'list',
+          name: 'student-mobile-list',
+          component: () => import('../views/student/RepairListView.vue'),
+          meta: { title: '我的报修' }
+        },
+        {
+          path: 'detail/:id',
+          name: 'student-mobile-detail',
+          component: () => import('../views/student/RepairDetailView.vue'),
+          meta: { title: '工单详情' }
+        },
+        {
+          path: 'feedback/:id',
+          name: 'student-mobile-feedback',
+          component: () => import('../views/student/RepairFeedbackView.vue'),
+          meta: { title: '评价工单' }
+        },
+        {
+          path: 'profile',
+          name: 'student-mobile-profile',
+          component: () => import('../views/student/ProfileView.vue'),
+          meta: { title: '个人中心' }
+        },
+        {
+          path: 'notifications',
+          name: 'student-mobile-notifications',
+          component: () => import('../views/shared/NotificationView.vue'),
+          meta: { title: '我的通知' }
+        }
+      ]
+    },
     {
       path: '/repairer',
       component: () => import('../layouts/WorkerLayout.vue'),
       meta: { requiresAuth: true, role: 'REPAIRER' },
+      beforeEnter: () => { if (isMobileDevice()) return '/repairer/m' },
       children: [
+        { path: '', redirect: '/repairer/dashboard' },
         {
           path: 'dashboard',
           name: 'worker-dashboard',
@@ -109,6 +171,46 @@ const router = createRouter({
         {
           path: 'notifications',
           name: 'worker-notifications',
+          component: () => import('../views/shared/NotificationView.vue'),
+          meta: { title: '我的通知' }
+        }
+      ]
+    },
+    // Worker mobile routes
+    {
+      path: '/repairer/m',
+      component: () => import('../layouts/WorkerMobileLayout.vue'),
+      meta: { requiresAuth: true, role: 'REPAIRER' },
+      beforeEnter: () => { if (!isMobileDevice()) return '/repairer' },
+      children: [
+        { path: '', redirect: '/repairer/m/dashboard' },
+        {
+          path: 'dashboard',
+          name: 'worker-mobile-dashboard',
+          component: () => import('../views/worker/mobile/MobileDashboardView.vue'),
+          meta: { title: '工作台' }
+        },
+        {
+          path: 'orders',
+          name: 'worker-mobile-orders',
+          component: () => import('../views/worker/mobile/MobileOrdersView.vue'),
+          meta: { title: '我的工单' }
+        },
+        {
+          path: 'orders/:id',
+          name: 'worker-mobile-order-detail',
+          component: () => import('../views/worker/OrderDetailView.vue'),
+          meta: { title: '工单详情' }
+        },
+        {
+          path: 'profile',
+          name: 'worker-mobile-profile',
+          component: () => import('../views/worker/ProfileView.vue'),
+          meta: { title: '个人中心' }
+        },
+        {
+          path: 'notifications',
+          name: 'worker-mobile-notifications',
           component: () => import('../views/shared/NotificationView.vue'),
           meta: { title: '我的通知' }
         }
@@ -179,13 +281,19 @@ const router = createRouter({
 })
 
 // Navigation Guard
-router.beforeEach(async (to, _from, next) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
   const isLoggedIn = !!authStore.token
 
   if (to.meta.requiresAuth) {
     if (!isLoggedIn) {
-      return next('/login')
+      return '/login'
+    }
+
+    // Token exists but user data missing (e.g. corrupted sessionStorage)
+    if (!authStore.user) {
+      authStore.logout()
+      return '/login'
     }
 
     if (to.meta.role && authStore.user && authStore.user.role !== to.meta.role) {
@@ -193,14 +301,12 @@ router.beforeEach(async (to, _from, next) => {
       toast.error('权限不足，无法访问该页面')
       const roleFallback: Record<string, string> = {
         ADMIN: '/admin/dashboard',
-        STUDENT: '/student/home',
-        REPAIRER: '/repairer/dashboard'
+        STUDENT: isMobileDevice() ? '/student/m/home' : '/student/home',
+        REPAIRER: isMobileDevice() ? '/repairer/m/dashboard' : '/repairer/dashboard'
       }
-      return next(roleFallback[authStore.user.role] || '/login')
+      return roleFallback[authStore.user.role] || '/login'
     }
   }
-
-  next()
 })
 
 export default router

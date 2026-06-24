@@ -180,7 +180,7 @@ const updateStatusOptions = computed(() => {
   }
   if (status === 4) {
     return [
-      { label: '已完成（代学生确认）', value: 5 },
+      { label: '已完成（待学生确认）', value: 5 },
       { label: '取消工单', value: 6 }
     ]
   }

@@ -9,6 +9,7 @@ import UiStarDisplay from '../../components/ui/UiStarDisplay.vue'
 import { getRepairDetailApi, workerCompleteApi, getRepairFeedbackApi } from '../../api/repair'
 import { REPAIR_STATUS_MAP } from '../../constants/repair'
 import { useToast } from '../../composables/useToast'
+import { workerOrderListPath } from '../../utils/device'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,7 +88,7 @@ const handleComplete = async () => {
   try {
     await workerCompleteApi(order.value.id, remark.value)
     toast.success('维修完成标记成功')
-    router.push('/repairer/orders')
+    router.push(workerOrderListPath())
   } catch (err: any) {
     toast.error(err.message || '操作失败')
   }
@@ -99,7 +100,7 @@ onMounted(fetchOrder)
 
 <template>
   <div class="order-detail" v-if="order">
-    <button class="back-btn" @click="$router.push('/repairer/orders')">
+    <button class="back-btn" @click="$router.push(workerOrderListPath())">
       &larr; 返回我的工单
     </button>
 
@@ -360,6 +361,28 @@ onMounted(fetchOrder)
   }
   .image-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .order-title {
+    font-size: 18px;
+  }
+  .order-detail {
+    padding: 0;
+  }
+  .info-grid {
+    gap: 8px;
+  }
+  .detail-image {
+    width: 100%;
+    max-width: 200px;
+  }
+  .image-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .side-title {
+    font-size: 15px;
   }
 }
 </style>

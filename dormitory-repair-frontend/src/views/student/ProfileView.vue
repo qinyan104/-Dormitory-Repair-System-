@@ -414,6 +414,50 @@ const handlePasswordSubmit = async () => {
   gap: 12px;
   margin-top: 12px;
 }
+
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .info-card {
+    padding: 20px 16px !important;
+  }
+  .user-header {
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .user-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+  .user-name {
+    font-size: 20px;
+  }
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .info-label {
+    width: auto;
+  }
+  .info-actions {
+    flex-direction: column;
+  }
+  .info-actions :deep(.mc-button) {
+    width: 100%;
+    min-height: 48px;
+  }
+  .password-footer {
+    flex-direction: column;
+  }
+  .password-footer :deep(.mc-button) {
+    width: 100%;
+    min-height: 48px;
+  }
+}
 </style>
 
 

@@ -7,6 +7,7 @@ import { getMyRepairListApi } from '../../api/repair'
 import { REPAIR_STATUS_MAP } from '../../constants/repair'
 import { useToast } from '../../composables/useToast'
 import { getPageRecords } from '../../utils/page'
+import { repairDetailPath } from '../../utils/device'
 
 const toast = useToast()
 
@@ -79,7 +80,7 @@ onMounted(fetchRepairs)
         <h3 class="item-title">{{ item.title }}</h3>
         <p class="item-meta">{{ item.categoryName || '未分类' }} · {{ item.submitTime?.replace('T', ' ').slice(0, 16) }}</p>
         <div class="item-actions">
-          <UiButton type="secondary" @click="$router.push(`/student/repair/detail/${item.id}`)">查看详情</UiButton>
+          <UiButton type="secondary" @click="$router.push(repairDetailPath(item.id))">查看详情</UiButton>
         </div>
       </UiCard>
     </div>
@@ -201,5 +202,31 @@ onMounted(fetchRepairs)
 .current {
   font-weight: 500;
   color: var(--mc-ink);
+}
+
+@media (max-width: 768px) {
+  .status-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+  }
+  .status-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .tab-btn {
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    text-align: center;
+  }
+  .page-btns {
+    justify-content: center;
+  }
 }
 </style>

@@ -31,17 +31,24 @@ const fetchOrders = async () => {
     const data: any = await getWorkerOrdersApi(params)
     orders.value = data?.records || data || []
     total.value = data?.total || 0
-  } catch { /* handled */ }
+  } catch {
+    toast.error('加载工单列表失败，请重试')
+  }
   finally { loading.value = false }
 }
 
+const acceptLoading = ref<number | null>(null)
+
 const handleAccept = async (id: number) => {
+  acceptLoading.value = id
   try {
     await workerAcceptApi(id)
     toast.success('接单成功')
     fetchOrders()
   } catch (err: any) {
     toast.error(err.message || '操作失败')
+  } finally {
+    acceptLoading.value = null
   }
 }
 
@@ -88,6 +95,7 @@ onMounted(fetchOrders)
             <UiButton
               v-if="order.repairStatus === 2"
               type="primary"
+              :loading="acceptLoading === order.id"
               @click="handleAccept(order.id)"
             >
               接单

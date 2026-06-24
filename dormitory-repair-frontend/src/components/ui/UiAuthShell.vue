@@ -904,6 +904,73 @@ withDefaults(defineProps<Props>(), {
   }
 }
 
+/* Mobile: hide brand panel, show form only */
+@media (max-width: 768px) {
+  .auth-shell,
+  .auth-shell.is-register {
+    grid-template-columns: 1fr;
+    min-height: 100dvh;
+  }
+
+  .auth-shell__story {
+    display: none;
+  }
+
+  .auth-shell__workspace {
+    min-height: 100dvh;
+    padding: 32px 20px 48px;
+    place-items: center;
+    background: var(--mc-canvas);
+  }
+
+  .auth-shell__form-stage {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .auth-shell.is-register .auth-shell__form-stage {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .auth-shell__panel-header {
+    margin-top: 16px;
+  }
+
+  .auth-shell__panel-header h2 {
+    font-size: 28px;
+  }
+
+  .auth-shell__panel-header p {
+    font-size: 13px;
+    margin-top: 10px;
+  }
+
+  .auth-shell__panel-body {
+    margin-top: 24px;
+  }
+
+  .auth-shell__panel-meta span:last-child,
+  .auth-shell__workspace-note {
+    display: none;
+  }
+
+  :deep(.mc-button--primary) {
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  :deep(.captcha-row) {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  :deep(.captcha-box) {
+    height: 40px;
+    max-width: 180px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .auth-shell__route-signal,
   .auth-shell__step,
