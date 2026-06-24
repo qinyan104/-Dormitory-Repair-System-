@@ -87,6 +87,14 @@ const handleForgotPassword = async () => {
   }
 }
 
+const handleClearCache = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  sessionStorage.clear()
+  toast.success('缓存已清除，请重新登录')
+  window.location.reload()
+}
+
 onMounted(() => {
   // Auto-show server config on first native launch when no address is saved
   if (isNativeApp() && !getSavedServerAddress()) {
@@ -288,6 +296,14 @@ const handleLogin = async () => {
         </UiButton>
       </form>
     </UiModal>
+
+    <!-- 清除缓存按钮 -->
+    <div class="clear-cache-section">
+      <p class="clear-cache-hint">登录遇到问题？</p>
+      <button class="clear-cache-btn" @click="handleClearCache">
+        🗑️ 清除浏览器缓存
+      </button>
+    </div>
   </UiAuthShell>
 </template>
 
@@ -322,5 +338,36 @@ const handleLogin = async () => {
 }
 .forgot-pwd a:hover {
   color: var(--mc-signal);
+}
+
+/* 清除缓存按钮样式 */
+.clear-cache-section {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mc-hairline);
+  text-align: center;
+}
+
+.clear-cache-hint {
+  font-size: 13px;
+  color: var(--mc-muted);
+  margin-bottom: 8px;
+}
+
+.clear-cache-btn {
+  background: none;
+  border: 1px solid var(--mc-hairline);
+  border-radius: var(--mc-radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--mc-muted);
+  cursor: pointer;
+  transition: all var(--mc-transition);
+}
+
+.clear-cache-btn:hover {
+  color: var(--mc-signal);
+  border-color: var(--mc-signal);
+  background-color: rgba(0, 0, 0, 0.02);
 }
 </style>
