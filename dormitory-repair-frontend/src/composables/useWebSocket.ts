@@ -84,6 +84,7 @@ export function useWebSocket() {
     if (client?.active) {
       client.deactivate()
     }
+    client = null  // 清空引用，避免旧Client残留
     connected.value = false
   }
 

@@ -21,7 +21,8 @@ onUnmounted(() => disconnect())
 
 const handleLogout = async () => {
   if (await confirm('确定要退出维修后台吗？')) {
-    authStore.logout()
+    disconnect()          // 先断开WebSocket连接
+    authStore.logout()    // 再清理认证状态
     router.push('/login')
   }
 }

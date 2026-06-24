@@ -7,6 +7,9 @@ import { getStatisticsSummaryApi, getStatisticsCategoryApi } from '../../api/sta
 import { getRepairListApi } from '../../api/repair'
 import { getPageRecords } from '../../utils/page'
 import { REPAIR_STATUS_MAP } from '../../constants/repair'
+import { useToast } from '../../composables/useToast'
+
+const toast = useToast()
 
 const summary = ref({
   total: 0,
@@ -26,17 +29,24 @@ const loading = ref(true)
 const fetchDashboardData = async () => {
   loading.value = true
   try {
-    const [summaryData, categoryData, repairData]: any = await Promise.all([
+    const [summaryResult, categoryResult, repairResult] = await Promise.allSettled([
       getStatisticsSummaryApi(),
       getStatisticsCategoryApi(),
       getRepairListApi({ pageNum: 1, pageSize: 8 })
     ])
 
-    summary.value = summaryData
-    categories.value = categoryData
-    recentRepairs.value = getPageRecords(repairData)
-  } catch (err) {
+    if (summaryResult.status === 'fulfilled') summary.value = summaryResult.value.data
+    if (categoryResult.status === 'fulfilled') categories.value = categoryResult.value.data
+    if (repairResult.status === 'fulfilled') recentRepairs.value = getPageRecords(repairResult.value.data)
+
+    // 如果有任何请求失败，显示提示
+    const failedResults = [summaryResult, categoryResult, repairResult].filter(r => r.status === 'rejected')
+    if (failedResults.length > 0) {
+      toast.error('部分数据加载失败，请稍后刷新重试')
+    }
+  } catch (err: any) {
     console.error('Failed to fetch dashboard data:', err)
+    toast.error('加载数据失败：' + (err.message || '请检查网络连接'))
   } finally {
     loading.value = false
   }

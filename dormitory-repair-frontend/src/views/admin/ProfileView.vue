@@ -2,14 +2,17 @@
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/auth'
 import { useConfirm } from '../../composables/useConfirm'
+import { useWebSocket } from '../../composables/useWebSocket'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { confirm } = useConfirm()
+const { disconnect } = useWebSocket()
 
 const handleLogout = async () => {
   if (await confirm('确定要退出管理系统吗？')) {
-    authStore.logout()
+    disconnect()          // 先断开WebSocket连接
+    authStore.logout()    // 再清理认证状态
     router.push('/login')
   }
 }

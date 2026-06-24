@@ -12,9 +12,11 @@ import { updateUserProfileApi, getUserProfileApi, changePasswordApi } from '../.
 import { uploadFileApi } from '../../api/file'
 import { useToast } from '../../composables/useToast'
 import { useConfirm } from '../../composables/useConfirm'
+import { useWebSocket } from '../../composables/useWebSocket'
 
 const toast = useToast()
 const { confirm } = useConfirm()
+const { disconnect } = useWebSocket()
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -38,7 +40,8 @@ const genderOptions = [
 
 const handleLogout = async () => {
   if (await confirm('确定要退出维修后台吗？')) {
-    authStore.logout()
+    disconnect()          // 先断开WebSocket连接
+    authStore.logout()    // 再清理认证状态
     router.push('/login')
   }
 }
