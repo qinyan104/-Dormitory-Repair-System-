@@ -1,7 +1,12 @@
 package com.example.dormitoryrepair.service;
 
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.example.dormitoryrepair.dto.ai.ClassifyResponse;
 import com.example.dormitoryrepair.dto.ai.RecommendResponse;
+import com.example.dormitoryrepair.dto.ai.RepairChatRequest;
+import com.example.dormitoryrepair.dto.ai.RepairChatResponse;
+import com.example.dormitoryrepair.entity.RepairCategory;
 import com.example.dormitoryrepair.entity.RepairOrder;
 import com.example.dormitoryrepair.entity.SysUser;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -64,6 +69,202 @@ class AiServiceTest {
 
         assertNull(result);
         verify(repairOrderService).getById(999L);
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void recommendWorker_AutoAssignsSingleAvailableRepairerEvenWithoutMetadata() {
+        RepairOrder order = new RepairOrder();
+        order.setId(1L);
+        order.setUserId(10L);
+        order.setCategoryId(2L);
+        order.setTitle("空调坏了");
+        order.setContent("宿舍空调无法制冷，需要维修");
+
+        SysUser worker = new SysUser();
+        worker.setId(3L);
+        worker.setRealName("李师傅");
+        worker.setRole("REPAIRER");
+        worker.setStatus(1);
+
+        SysUser student = new SysUser();
+        student.setId(10L);
+        student.setDormitoryBuilding("14号楼");
+
+        LambdaQueryChainWrapper<SysUser> userQuery = mock(LambdaQueryChainWrapper.class, RETURNS_SELF);
+        LambdaQueryChainWrapper<RepairOrder> orderQuery = mock(LambdaQueryChainWrapper.class, RETURNS_SELF);
+        when(repairOrderService.getById(1L)).thenReturn(order);
+        when(sysUserService.lambdaQuery()).thenReturn(userQuery);
+        when(userQuery.eq(any(), any())).thenReturn(userQuery);
+        when(userQuery.list()).thenReturn(List.of(worker));
+        when(sysUserService.getById(10L)).thenReturn(student);
+        when(repairOrderService.listMaps(any(Wrapper.class))).thenReturn(List.of());
+        when(repairOrderService.lambdaQuery()).thenReturn(orderQuery);
+        when(orderQuery.in(any(), anyCollection())).thenReturn(orderQuery);
+        when(orderQuery.eq(any(), any())).thenReturn(orderQuery);
+        when(orderQuery.list()).thenReturn(List.of());
+
+        RecommendResponse result = aiService.recommendWorker(1L);
+
+        assertNotNull(result);
+        assertTrue(result.getAutoAssigned());
+        assertEquals(3L, result.getAssignedWorkerId());
+        assertEquals(1, result.getRankings().size());
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void recommendWorker_AutoAssignsTopRepairerForRecognizableOrderEvenBelowStrictThreshold() {
+        RepairOrder order = new RepairOrder();
+        order.setId(2L);
+        order.setUserId(10L);
+        order.setCategoryId(2L);
+        order.setTitle("水龙头漏水");
+        order.setContent("卫生间水龙头一直滴水，需要维修");
+
+        RepairCategory category = new RepairCategory();
+        category.setId(2L);
+        category.setCategoryName("水电维修");
+
+        SysUser firstWorker = new SysUser();
+        firstWorker.setId(3L);
+        firstWorker.setRealName("李师傅");
+        firstWorker.setRole("REPAIRER");
+        firstWorker.setStatus(1);
+
+        SysUser secondWorker = new SysUser();
+        secondWorker.setId(4L);
+        secondWorker.setRealName("王师傅");
+        secondWorker.setRole("REPAIRER");
+        secondWorker.setStatus(1);
+
+        SysUser student = new SysUser();
+        student.setId(10L);
+        student.setDormitoryBuilding("14号楼");
+
+        LambdaQueryChainWrapper<SysUser> userQuery = mock(LambdaQueryChainWrapper.class, RETURNS_SELF);
+        LambdaQueryChainWrapper<RepairOrder> orderQuery = mock(LambdaQueryChainWrapper.class, RETURNS_SELF);
+        when(repairOrderService.getById(2L)).thenReturn(order);
+        when(sysUserService.lambdaQuery()).thenReturn(userQuery);
+        when(userQuery.eq(any(), any())).thenReturn(userQuery);
+        when(userQuery.list()).thenReturn(List.of(firstWorker, secondWorker));
+        when(sysUserService.getById(10L)).thenReturn(student);
+        when(categoryService.getById(2L)).thenReturn(category);
+        when(repairOrderService.listMaps(any(Wrapper.class))).thenReturn(List.of());
+        when(repairOrderService.lambdaQuery()).thenReturn(orderQuery);
+        when(orderQuery.in(any(), anyCollection())).thenReturn(orderQuery);
+        when(orderQuery.eq(any(), any())).thenReturn(orderQuery);
+        when(orderQuery.list()).thenReturn(List.of());
+
+        RecommendResponse result = aiService.recommendWorker(2L);
+
+        assertNotNull(result);
+        assertTrue(result.getAutoAssigned());
+        assertEquals(3L, result.getAssignedWorkerId());
+    }
+
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void recommendWorker_KeepsClearlyInvalidOrderForManualReview() {
+        RepairOrder order = new RepairOrder();
+        order.setId(3L);
+        order.setUserId(10L);
+        order.setCategoryId(6L);
+        order.setTitle("你好");
+        order.setContent("测试一下");
+
+        RepairCategory category = new RepairCategory();
+        category.setId(6L);
+        category.setCategoryName("其他");
+
+        SysUser worker = new SysUser();
+        worker.setId(3L);
+        worker.setRealName("李师傅");
+        worker.setRole("REPAIRER");
+        worker.setStatus(1);
+
+        SysUser student = new SysUser();
+        student.setId(10L);
+        student.setDormitoryBuilding("14号楼");
+
+        LambdaQueryChainWrapper<SysUser> userQuery = mock(LambdaQueryChainWrapper.class, RETURNS_SELF);
+        LambdaQueryChainWrapper<RepairOrder> orderQuery = mock(LambdaQueryChainWrapper.class, RETURNS_SELF);
+        when(repairOrderService.getById(3L)).thenReturn(order);
+        when(sysUserService.lambdaQuery()).thenReturn(userQuery);
+        when(userQuery.eq(any(), any())).thenReturn(userQuery);
+        when(userQuery.list()).thenReturn(List.of(worker));
+        when(sysUserService.getById(10L)).thenReturn(student);
+        when(categoryService.getById(6L)).thenReturn(category);
+        when(repairOrderService.listMaps(any(Wrapper.class))).thenReturn(List.of());
+        when(repairOrderService.lambdaQuery()).thenReturn(orderQuery);
+        when(orderQuery.in(any(), anyCollection())).thenReturn(orderQuery);
+        when(orderQuery.eq(any(), any())).thenReturn(orderQuery);
+        when(orderQuery.list()).thenReturn(List.of());
+
+        RecommendResponse result = aiService.recommendWorker(3L);
+
+        assertNotNull(result);
+        assertFalse(result.getAutoAssigned());
+        assertNull(result.getAssignedWorkerId());
+        assertEquals(1, result.getRankings().size());
+    }
+
+    @Test
+    void repairChat_WhenApiKeyEmpty_ReturnsNull() {
+        when(deepSeekClient.isConfigured()).thenReturn(false);
+
+        RepairChatRequest request = new RepairChatRequest();
+        request.setMessage("空调坏了");
+        request.setPhase("problem");
+
+        RepairChatResponse result = aiService.repairChat(request);
+
+        assertNull(result);
+        verify(deepSeekClient, never()).call(anyString());
+    }
+
+    @Test
+    void repairChat_ParsesDynamicChoicesAndFieldUpdates() {
+        when(deepSeekClient.isConfigured()).thenReturn(true);
+        when(deepSeekClient.sanitizeForPrompt(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deepSeekClient.extractJson(anyString())).thenCallRealMethod();
+        when(deepSeekClient.call(anyString())).thenReturn("""
+                ```json
+                {
+                  "repairIntent": true,
+                  "readyToSummarize": false,
+                  "reply": "我先按空调问题帮你整理，请选择最接近的现象。",
+                  "issueType": "air-conditioner",
+                  "issueName": "空调",
+                  "issueDetail": "",
+                  "impact": "",
+                  "extra": "",
+                  "summary": "",
+                  "confidence": 0.88,
+                  "choices": [
+                    {"label": "不制冷", "value": "不制冷", "action": "detail", "hint": "开机后没有冷风"},
+                    {"label": "不通电", "value": "不通电", "action": "detail", "hint": "无法开机或面板无反应"}
+                  ]
+                }
+                ```
+                """);
+
+        RepairChatRequest request = new RepairChatRequest();
+        request.setMessage("空调坏了");
+        request.setPhase("problem");
+        request.setDormitoryBuilding("14号楼");
+        request.setRoomNo("703");
+
+        RepairChatResponse result = aiService.repairChat(request);
+
+        assertNotNull(result);
+        assertTrue(result.getRepairIntent());
+        assertFalse(result.getReadyToSummarize());
+        assertEquals("air-conditioner", result.getIssueType());
+        assertEquals("空调", result.getIssueName());
+        assertEquals(2, result.getChoices().size());
+        assertEquals("不制冷", result.getChoices().get(0).getLabel());
+        assertEquals("detail", result.getChoices().get(0).getAction());
     }
 
     @Test

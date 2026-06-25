@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import UiInput from '../../components/ui/UiInput.vue'
 import UiButton from '../../components/ui/UiButton.vue'
@@ -30,11 +30,17 @@ const captchaCode = ref('')
 const captchaImage = ref('')
 const captchaError = ref('')
 const showServerConfig = ref(false)
+let captchaRequestId = 0
 
 onMounted(() => {
   if (isNativeApp() && !getSavedServerAddress()) {
     showServerConfig.value = true
   }
+  fetchCaptcha()
+})
+
+onBeforeUnmount(() => {
+  captchaRequestId++
 })
 
 const setupSteps = [
@@ -61,22 +67,22 @@ const genderOptions = [
 ]
 
 const fetchCaptcha = async () => {
+  const requestId = ++captchaRequestId
   try {
     captchaError.value = ''
     captchaImage.value = ''
     const d: any = await getCaptchaApi()
+    if (requestId !== captchaRequestId) return
     captchaKey.value = d.captchaKey
     captchaImage.value = d.captchaImage
-  } catch (e: any) {
-    console.error('[captcha] 验证码加载失败:', e)
-    const detail = e?.message || e?.code || String(e)
-    captchaError.value = '验证码加载失败: ' + detail
+  } catch {
+    if (requestId !== captchaRequestId) return
+    captchaError.value = '点击刷新'
   }
 }
 
-fetchCaptcha()
-
 const handleRegister = async () => {
+  if (loading.value) return
   loading.value = true
   errors.value = {}
 

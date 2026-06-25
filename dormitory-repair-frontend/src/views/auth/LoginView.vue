@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import UiInput from '../../components/ui/UiInput.vue'
 import UiButton from '../../components/ui/UiButton.vue'
@@ -36,16 +36,22 @@ const forgotError = ref('')
 const forgotNewPassword = ref('')
 const forgotConfirmPassword = ref('')
 const forgotStudentNo = ref('')
+const loginSucceeded = ref(false)
+let captchaRequestId = 0
+let forgotCaptchaRequestId = 0
 
 const fetchForgotCaptcha = async () => {
+  const requestId = ++forgotCaptchaRequestId
   try {
     forgotCaptchaError.value = ''
     forgotCaptchaImage.value = ''
     const d: any = await getCaptchaApi()
+    if (requestId !== forgotCaptchaRequestId || loginSucceeded.value) return
     forgotCaptchaKey.value = d.captchaKey
     forgotCaptchaImage.value = d.captchaImage
-  } catch (e: any) {
-    forgotCaptchaError.value = '加载失败'
+  } catch {
+    if (requestId !== forgotCaptchaRequestId || loginSucceeded.value) return
+    forgotCaptchaError.value = '点击刷新'
   }
 }
 
@@ -92,6 +98,12 @@ onMounted(() => {
   if (isNativeApp() && !getSavedServerAddress()) {
     showServerConfig.value = true
   }
+  fetchCaptcha()
+})
+
+onBeforeUnmount(() => {
+  captchaRequestId++
+  forgotCaptchaRequestId++
 })
 
 const processSteps = [
@@ -118,22 +130,22 @@ const processSteps = [
 ] as const
 
 const fetchCaptcha = async () => {
+  const requestId = ++captchaRequestId
   try {
     captchaError.value = ''
     captchaImage.value = ''
     const d: any = await getCaptchaApi()
+    if (requestId !== captchaRequestId || loginSucceeded.value) return
     captchaKey.value = d.captchaKey
     captchaImage.value = d.captchaImage
-  } catch (e: any) {
-    console.error('[captcha] 验证码加载失败:', e)
-    const detail = e?.message || e?.code || String(e)
-    captchaError.value = '验证码加载失败: ' + detail
+  } catch {
+    if (requestId !== captchaRequestId || loginSucceeded.value) return
+    captchaError.value = '点击刷新'
   }
 }
 
-fetchCaptcha()
-
 const handleLogin = async () => {
+  if (loading.value || loginSucceeded.value) return
   loading.value = true
   errors.value = {}
 
@@ -156,6 +168,8 @@ const handleLogin = async () => {
 
     authStore.setToken(d.token)
     authStore.setUser(await getMeApi() as any)
+    loginSucceeded.value = true
+    captchaRequestId++
 
     const role = authStore.user?.role || 'STUDENT'
     router.push(
@@ -168,7 +182,9 @@ const handleLogin = async () => {
   } catch (e: any) {
     fetchCaptcha()
     captchaCode.value = ''
-    toast.error(e.message || '登录失败')
+    if (!loginSucceeded.value) {
+      toast.error(e.message || '登录失败')
+    }
   } finally {
     loading.value = false
   }
@@ -190,7 +206,7 @@ const handleLogin = async () => {
     footer-link-text="立即注册"
     footer-to="/register"
   >
-    <form class="auth-form" @submit.prevent="handleLogin" @keyup.enter="handleLogin">
+    <form class="auth-form" @submit.prevent="handleLogin">
       <UiInput
         v-model="form.username"
         label="用户名"

@@ -12,6 +12,7 @@ import com.example.dormitoryrepair.dto.user.ChangePasswordRequest;
 import com.example.dormitoryrepair.dto.user.UserCreateRequest;
 import com.example.dormitoryrepair.dto.user.UserProfileUpdateRequest;
 import com.example.dormitoryrepair.dto.user.UserQueryRequest;
+import com.example.dormitoryrepair.dto.user.UserRepairerProfileRequest;
 import com.example.dormitoryrepair.dto.user.UserStatusUpdateRequest;
 import com.example.dormitoryrepair.entity.SysUser;
 import com.example.dormitoryrepair.service.SysUserService;
@@ -111,11 +112,12 @@ public class UserController {
     public ApiResponse<Map<String, Object>> page(UserQueryRequest request) {
         ensureAdmin();
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<SysUser>()
+                .like(request.getUsername() != null && !request.getUsername().isBlank(), SysUser::getUsername, request.getUsername())
                 .like(request.getRealName() != null && !request.getRealName().isBlank(), SysUser::getRealName, request.getRealName())
                 .like(request.getStudentNo() != null && !request.getStudentNo().isBlank(), SysUser::getStudentNo, request.getStudentNo())
                 .eq(request.getStatus() != null, SysUser::getStatus, request.getStatus())
                 .eq(request.getRole() != null && !request.getRole().isBlank(), SysUser::getRole, request.getRole())
-                .orderByDesc(SysUser::getCreateTime);
+                .orderByDesc(SysUser::getId);
         IPage<SysUser> result = sysUserService.page(
                 new Page<>(request.getPageNum(), request.getPageSize()), wrapper);
         Map<String, Object> data = new HashMap<>();
@@ -153,6 +155,25 @@ public class UserController {
         user.setStatus(request.getStatus());
         sysUserService.updateById(user);
         return ApiResponse.success("状态更新成功", null);
+    }
+
+    @Log(type = "USER", value = "修改维修人员信息")
+    @PutMapping("/{id}/repairer-profile")
+    public ApiResponse<Void> updateRepairerProfile(
+            @PathVariable Long id,
+            @Valid @RequestBody UserRepairerProfileRequest request) {
+        ensureAdmin();
+        SysUser user = sysUserService.getById(id);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND);
+        }
+        if (!Objects.equals("REPAIRER", user.getRole())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "只能修改维修人员的技能和区域");
+        }
+        user.setSkillType(trimToNull(request.getSkillType()));
+        user.setServiceArea(trimToNull(request.getServiceArea()));
+        sysUserService.updateById(user);
+        return ApiResponse.success("维修人员信息更新成功", null);
     }
 
     @Log(type = "USER", value = "重置密码")
@@ -215,7 +236,17 @@ public class UserController {
         view.put("avatar", user.getAvatar());
         view.put("role", user.getRole());
         view.put("status", user.getStatus());
+        view.put("skillType", user.getSkillType());
+        view.put("serviceArea", user.getServiceArea());
         return view;
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();

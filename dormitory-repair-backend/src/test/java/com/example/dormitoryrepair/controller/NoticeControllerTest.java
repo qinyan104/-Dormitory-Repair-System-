@@ -1,6 +1,8 @@
 package com.example.dormitoryrepair.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.dormitoryrepair.common.auth.AuthContext;
 import com.example.dormitoryrepair.common.exception.BusinessException;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -180,6 +183,23 @@ class NoticeControllerTest {
         var result = controller.page(request);
 
         assertNotNull(result.getData().get("records"));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void pageOrdersNoticesByIdDesc() {
+        AuthContext.setRole("ADMIN");
+        Page<Notice> page = new Page<>(1, 10);
+        page.setRecords(java.util.List.of());
+        page.setTotal(0);
+        when(noticeService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+
+        controller.page(new NoticeQueryRequest());
+
+        ArgumentCaptor<LambdaQueryWrapper<Notice>> captor = ArgumentCaptor.forClass(LambdaQueryWrapper.class);
+        verify(noticeService).page(any(Page.class), captor.capture());
+        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), Notice.class);
+        assertTrue(captor.getValue().getSqlSegment().toLowerCase().contains("id desc"));
     }
 
     @Test

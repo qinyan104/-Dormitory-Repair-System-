@@ -75,5 +75,52 @@ const { toasts } = useToast()
 .toast-leave-active { transition: all 0.2s ease; }
 .toast-enter-from   { opacity: 0; transform: translateX(40px); }
 .toast-leave-to     { opacity: 0; transform: translateX(40px); }
+
+@media (max-width: 640px) {
+  .mc-toast-container {
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    left: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+
+  .mc-toast {
+    width: 100%;
+    max-width: none;
+    padding: 12px 14px;
+    border: 1px solid var(--mc-hairline);
+    background: var(--mc-white);
+    color: var(--mc-ink);
+    box-shadow: 0 10px 24px rgba(20, 20, 19, 0.16);
+  }
+
+  .mc-toast--success {
+    border-color: rgba(6, 95, 70, 0.22);
+    background: var(--mc-success-bg, #D1FAE5);
+    color: var(--mc-success-text, #065F46);
+  }
+
+  .mc-toast--error {
+    border-color: rgba(153, 27, 27, 0.22);
+    background: var(--mc-error-bg, #FEE2E2);
+    color: var(--mc-error-text, #991B1B);
+  }
+
+  .mc-toast--info {
+    border-color: rgba(56, 96, 190, 0.22);
+    background: #EEF3FF;
+    color: #1F3F8B;
+  }
+
+  .toast-enter-from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+
+  .toast-leave-to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
 </style>
 

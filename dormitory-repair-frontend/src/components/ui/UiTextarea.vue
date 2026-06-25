@@ -4,6 +4,7 @@ interface Props {
   label?: string
   placeholder?: string
   rows?: number
+  error?: string
   disabled?: boolean
 }
 
@@ -12,7 +13,7 @@ defineEmits(['update:modelValue'])
 </script>
 
 <template>
-  <div class="mc-textarea-group">
+  <div class="mc-textarea-group" :class="{ 'has-error': error }">
     <label v-if="label" class="mc-label">{{ label }}</label>
     <textarea
       :value="modelValue"
@@ -22,6 +23,7 @@ defineEmits(['update:modelValue'])
       class="mc-textarea"
       @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
     ></textarea>
+    <span v-if="error" class="mc-error-text">{{ error }}</span>
   </div>
 </template>
 
@@ -69,6 +71,20 @@ defineEmits(['update:modelValue'])
   background-color: var(--mc-lifted);
   color: var(--mc-muted);
   cursor: not-allowed;
+}
+
+.has-error .mc-textarea {
+  border-color: var(--mc-error);
+}
+
+.has-error .mc-textarea:focus {
+  box-shadow: 0 0 0 2px rgba(235, 0, 27, 0.15);
+}
+
+.mc-error-text {
+  font-size: 12px;
+  color: var(--mc-error);
+  margin-left: 2px;
 }
 </style>
 

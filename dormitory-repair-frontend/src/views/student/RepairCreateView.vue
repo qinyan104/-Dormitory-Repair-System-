@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted } from 'vue'
 import UiCard from '../../components/ui/UiCard.vue'
 import UiSectionTitle from '../../components/ui/UiSectionTitle.vue'
 import UiInput from '../../components/ui/UiInput.vue'
@@ -9,11 +9,12 @@ import UiTextarea from '../../components/ui/UiTextarea.vue'
 import { useRouter } from 'vue-router'
 import { getCategoriesApi, createRepairApi } from '../../api/repair'
 import { uploadFileApi } from '../../api/file'
-import { updateUserProfileApi } from '../../api/user'
+import { getUserProfileApi, updateUserProfileApi } from '../../api/user'
 import { useAuthStore } from '../../stores/auth'
 import { useToast } from '../../composables/useToast'
-import { aiClassifyApi, aiNaturalRepairApi } from '../../api/ai'
-import type { AiClassifyResponse, NaturalRepairResponse } from '../../types/models'
+import { useRepairAssistant } from '../../composables/useRepairAssistant'
+import { aiClassifyApi } from '../../api/ai'
+import type { AiClassifyResponse, RepairCategory } from '../../types/models'
 
 const toast = useToast()
 
@@ -31,7 +32,7 @@ const form = ref({
 
 const loading = ref(false)
 const uploading = ref(false)
-const categories = ref<any[]>([])
+const categories = ref<RepairCategory[]>([])
 const errors = ref<Record<string, string>>({})
 const fileInput = ref<HTMLInputElement | null>(null)
 
@@ -40,65 +41,33 @@ const aiResult = ref<AiClassifyResponse | null>(null)
 const aiError = ref('')
 
 const repairMode = ref<'manual' | 'ai'>('manual')
-const naturalText = ref('')
-const nlResult = ref<NaturalRepairResponse | null>(null)
-const nlError = ref('')
-const nlLoading = ref(false)
 
-const nlSubmitting = ref(false)
-
-const handleNaturalRepair = async () => {
-  if (!naturalText.value.trim()) {
-    nlError.value = '请输入报修描述'
-    return
-  }
-  nlLoading.value = true
-  nlError.value = ''
-  nlResult.value = null
-  try {
-    const result = await aiNaturalRepairApi(naturalText.value)
-    if (!result) {
-      nlError.value = 'AI 暂未返回结果，请稍后重试'
-      return
-    }
-    nlResult.value = result
-  } catch (e: any) {
-    nlError.value = e?.message || 'AI 识别失败，请重试'
-  } finally {
-    nlLoading.value = false
-  }
-}
-
-const applyNaturalResult = async () => {
-  if (!nlResult.value || nlSubmitting.value) return
-  nlSubmitting.value = true
-  // Auto-fill the form with AI extracted data
-  form.value.title = nlResult.value.repairType + (nlResult.value.description ? ' - ' + nlResult.value.description : '')
-  form.value.categoryId = String(nlResult.value.categoryId || '')
-  form.value.description = nlResult.value.description || naturalText.value
-  if (nlResult.value.building) form.value.dormitoryBuilding = nlResult.value.building
-  if (nlResult.value.room) form.value.roomNo = nlResult.value.room
-
-  // Set AI result for submit
-  aiResult.value = {
-    category: nlResult.value.categoryName || '',
-    categoryId: nlResult.value.categoryId || 0,
-    categoryName: nlResult.value.categoryName || '',
-    urgency: nlResult.value.urgencyLevel || '',
-    priorityScore: nlResult.value.priorityScore || 5,
-    impactScope: 5,
-    confidence: nlResult.value.confidence || 0.5,
-    reason: nlResult.value.reason || '',
-    suggestion: '',
-    autoApplied: true
-  }
-
-  // Switch to manual and submit
-  repairMode.value = 'manual'
-  await nextTick()
-  handleSubmit()
-  nlSubmitting.value = false
-}
+const {
+  phase: assistantPhase,
+  messages: assistantMessages,
+  choices: assistantChoices,
+  input: assistantInput,
+  summary: assistantSummary,
+  inputPlaceholder: assistantInputPlaceholder,
+  classificationLoading: assistantClassifying,
+  classificationError: assistantClassifyError,
+  assistantSteps,
+  activeQuestion,
+  choiceHeading,
+  progressPercent,
+  collectedItems,
+  chatLoading: assistantChatLoading,
+  chatError: assistantChatError,
+  sendInput: sendAssistantInput,
+  choose: chooseAssistantOption,
+  applySummaryToForm,
+  reset: resetAssistant
+} = useRepairAssistant({
+  form,
+  categories,
+  getUser: () => authStore.user,
+  setAiResult: (result) => { aiResult.value = result }
+})
 
 const fetchCategories = async () => {
   try {
@@ -109,8 +78,25 @@ const fetchCategories = async () => {
   }
 }
 
-onMounted(() => {
-  fetchCategories()
+const refreshStudentProfile = async () => {
+  try {
+    const latestUser: any = await getUserProfileApi()
+    if (!latestUser) return
+    authStore.setUser({ ...authStore.user, ...latestUser })
+    if (!form.value.dormitoryBuilding && latestUser.dormitoryBuilding) {
+      form.value.dormitoryBuilding = latestUser.dormitoryBuilding
+    }
+    if (!form.value.roomNo && latestUser.roomNo) {
+      form.value.roomNo = latestUser.roomNo
+    }
+  } catch (err) {
+    console.error('Failed to refresh student profile:', err)
+  }
+}
+
+onMounted(async () => {
+  await Promise.all([fetchCategories(), refreshStudentProfile()])
+  resetAssistant()
 })
 
 const triggerUpload = () => {
@@ -170,8 +156,8 @@ const handleClassify = async () => {
       aiResult.value = data
       // 高置信度：自动填入
       if (data.autoApplied) {
-        form.value.categoryId = data.categoryId
-        toast.success('✅ AI 已自动填写分类和紧急度')
+        form.value.categoryId = String(data.categoryId)
+        toast.success('AI 已自动填写分类和紧急度')
       }
     } else {
       aiError.value = 'AI 暂未返回结果，请稍后再试'
@@ -230,6 +216,21 @@ const handleSubmit = async () => {
     toast.error(err.message || '提交失败，请重试')
   }
 }
+
+const reviewAssistantDraft = () => {
+  applySummaryToForm()
+  repairMode.value = 'manual'
+}
+
+const submitAssistantDraft = async () => {
+  applySummaryToForm()
+  if (!form.value.categoryId) {
+    repairMode.value = 'manual'
+    toast.info('请先确认报修分类')
+    return
+  }
+  await handleSubmit()
+}
 </script>
 
 <template>
@@ -242,122 +243,160 @@ const handleSubmit = async () => {
         <div class="form-section switch-section">
           <div class="mode-switch">
             <button type="button" :class="['mode-btn', { active: repairMode === 'manual' }]" @click="repairMode = 'manual'">
-              <span class="mode-icon">✏️</span>
               手动填写
             </button>
             <button type="button" :class="['mode-btn', { active: repairMode === 'ai' }]" @click="repairMode = 'ai'">
-              <span class="mode-icon">✨</span>
               智能报修
             </button>
           </div>
         </div>
 
         <!-- 智能报修模式 -->
-        <div v-if="repairMode === 'ai'" class="form-section ai-mode-section">
-          <div class="ai-mode-header">
-            <div class="ai-mode-icon">🤖</div>
-            <div class="ai-mode-text">
-              <h4>智能报修助手</h4>
-              <p>只需一句话描述问题，AI 自动提取关键信息</p>
+        <div v-if="repairMode === 'ai'" class="form-section assistant-section">
+          <div class="assistant-shell">
+            <div class="assistant-topbar">
+              <div>
+                <span class="assistant-kicker">智能引导</span>
+                <h4>智能报修助手</h4>
+              </div>
+              <button type="button" class="assistant-reset" @click="resetAssistant">重新开始</button>
             </div>
-          </div>
-          
-          <div class="ai-input-group">
-            <label class="mc-label">问题描述</label>
-            <textarea
-              v-model="naturalText"
-              class="mc-textarea ai-textarea"
-              placeholder="例如：3号楼502空调不制冷，晚上热得睡不着，帮我报修。"
-              rows="4"
-            ></textarea>
-          </div>
-          
-          <div class="ai-actions">
-            <UiButton 
-              type="primary" 
-              :loading="nlLoading" 
-              :disabled="!naturalText.trim()"
-              @click="handleNaturalRepair"
-              class="ai-analyze-btn"
-            >
-              <span class="btn-icon">🔍</span>
-              {{ nlLoading ? 'AI 分析中...' : '开始智能分析' }}
-            </UiButton>
-          </div>
-          
-          <div v-if="nlError" class="ai-error-card">
-            <div class="error-icon">⚠️</div>
-            <div class="error-content">
-              <div class="error-title">分析失败</div>
-              <div class="error-message">{{ nlError }}</div>
-            </div>
-          </div>
-          
-          <div v-if="nlResult" class="ai-result-card">
-            <div class="result-header">
-              <div class="result-icon">✅</div>
-              <div class="result-title">AI 分析结果</div>
-            </div>
-            
-            <div class="result-grid">
-              <div class="result-item">
-                <span class="result-label">楼栋</span>
-                <span class="result-value" :class="{ 'not-recognized': !nlResult.building }">
-                  {{ nlResult.building || '未识别' }}
-                </span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">房号</span>
-                <span class="result-value" :class="{ 'not-recognized': !nlResult.room }">
-                  {{ nlResult.room || '未识别' }}
-                </span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">故障类型</span>
-                <span class="result-value" :class="{ 'not-recognized': !nlResult.repairType }">
-                  {{ nlResult.repairType || '未识别' }}
-                </span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">建议分类</span>
-                <span class="result-value category">{{ nlResult.categoryName || '未识别' }}</span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">紧急程度</span>
-                <span class="result-value urgency" :class="nlResult.urgencyLevel">
-                  {{ nlResult.urgencyLevel || '未识别' }}
-                </span>
-              </div>
-              <div class="result-item">
-                <span class="result-label">置信度</span>
-                <span class="result-value confidence">
-                  {{ (nlResult.confidence * 100).toFixed(0) }}%
-                </span>
-              </div>
-            </div>
-            
-            <div class="result-reason">
-              <div class="reason-label">判断依据</div>
-              <div class="reason-text">{{ nlResult.reason }}</div>
-            </div>
-            
-            <div class="result-actions">
-              <UiButton 
-                type="secondary" 
-                @click="nlResult = null"
-                class="re-analyze-btn"
+
+            <div class="assistant-progress" :style="{ '--progress': progressPercent + '%' }">
+              <div class="assistant-progress-line"></div>
+              <div
+                v-for="step in assistantSteps"
+                :key="step.key"
+                :class="['assistant-step', `is-${step.state}`]"
               >
-                重新分析
-              </UiButton>
-              <UiButton 
-                type="primary" 
-                :loading="nlSubmitting" 
-                @click="applyNaturalResult"
-                class="submit-btn"
-              >
-                <span class="btn-icon">📝</span>
-                确认并提交报修
-              </UiButton>
+                <span class="step-dot"></span>
+                <span class="step-label">{{ step.label }}</span>
+              </div>
+            </div>
+
+            <div class="assistant-workspace">
+              <aside class="assistant-side">
+                <div class="side-block location-block">
+                  <span class="side-label">当前宿舍</span>
+                  <strong>
+                    {{ form.dormitoryBuilding || authStore.user?.dormitoryBuilding || '未填写楼栋' }}
+                    ·
+                    {{ form.roomNo || authStore.user?.roomNo || '未填写房号' }}
+                  </strong>
+                </div>
+
+                <div class="side-block">
+                  <span class="side-label">已采集信息</span>
+                  <div class="collected-list">
+                    <div
+                      v-for="item in collectedItems"
+                      :key="item.label"
+                      :class="['collected-item', { complete: item.complete }]"
+                    >
+                      <span>{{ item.label }}</span>
+                      <strong>{{ item.value }}</strong>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              <section class="assistant-dialog">
+                <div class="assistant-dialog-header">
+                  <div>
+                    <span class="dialog-label">当前问题</span>
+                    <h5>{{ activeQuestion.title }}</h5>
+                    <p>{{ activeQuestion.description }}</p>
+                  </div>
+                </div>
+
+                <div class="assistant-chat-window">
+                  <div
+                    v-for="message in assistantMessages"
+                    :key="message.id"
+                    :class="['assistant-message', `is-${message.role}`]"
+                  >
+                    <span class="message-avatar">{{ message.role === 'assistant' ? '助' : '我' }}</span>
+                    <div class="message-bubble">
+                      <span class="message-role">{{ message.role === 'assistant' ? '报修助手' : '我' }}</span>
+                      <p>{{ message.text }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="assistantChoices.length" class="assistant-choice-panel">
+                  <span class="choice-heading">{{ choiceHeading }}</span>
+                  <div class="assistant-options">
+                    <button
+                      v-for="choice in assistantChoices"
+                      :key="choice.label"
+                      type="button"
+                      class="assistant-option"
+                      :disabled="assistantChatLoading"
+                      @click="chooseAssistantOption(choice)"
+                    >
+                      <span>{{ choice.label }}</span>
+                      <small v-if="choice.hint">{{ choice.hint }}</small>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="assistant-input-group">
+                  <textarea
+                    v-model="assistantInput"
+                    class="mc-textarea assistant-textarea"
+                    :placeholder="assistantInputPlaceholder"
+                    rows="2"
+                    @keydown.enter.exact.prevent="sendAssistantInput"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="assistant-send"
+                    :disabled="!assistantInput.trim() || assistantClassifying || assistantChatLoading"
+                    @click="sendAssistantInput"
+                  >
+                    {{ assistantChatLoading ? '思考中' : '发送' }}
+                  </button>
+                </div>
+
+                <div v-if="assistantChatError" class="ai-error">
+                  {{ assistantChatError }}
+                </div>
+
+                <div v-if="assistantPhase === 'review'" class="assistant-review-card">
+                  <div class="review-header">
+                    <span class="review-title">报修摘要</span>
+                    <span class="review-note">可直接修改</span>
+                  </div>
+                  <textarea
+                    v-model="assistantSummary"
+                    class="mc-textarea summary-textarea"
+                    rows="7"
+                  ></textarea>
+
+                  <div v-if="assistantClassifying" class="ai-loading">
+                    <span class="ai-loader"></span>
+                    <span>正在辅助判断分类...</span>
+                  </div>
+
+                  <div v-if="assistantClassifyError" class="ai-error">
+                    {{ assistantClassifyError }}
+                  </div>
+
+                  <div class="result-actions">
+                    <UiButton type="secondary" @click.prevent="reviewAssistantDraft">
+                      填入表单检查
+                    </UiButton>
+                    <UiButton
+                      type="primary"
+                      :loading="loading"
+                      :disabled="assistantClassifying"
+                      @click.prevent="submitAssistantDraft"
+                    >
+                      确认并提交报修
+                    </UiButton>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         </div>
@@ -437,9 +476,9 @@ const handleSubmit = async () => {
           <UiButton
             type="secondary"
             :disabled="aiLoading || !form.title || !form.description"
-            @click="handleClassify"
+            @click.prevent="handleClassify"
           >
-            {{ aiLoading ? 'AI 分析中...' : '🤖 AI 智能分析' }}
+            {{ aiLoading ? 'AI 分析中...' : 'AI 智能分析' }}
           </UiButton>
 
           <div v-if="aiLoading" class="ai-loading">
@@ -469,7 +508,7 @@ const handleSubmit = async () => {
         </div>
 
         <div class="form-actions">
-          <UiButton type="secondary" @click="$router.back()" :disabled="loading">取消</UiButton>
+          <UiButton type="secondary" @click.prevent="$router.back()" :disabled="loading">取消</UiButton>
           <UiButton type="primary" :loading="loading">提交报修单</UiButton>
         </div>
       </template>
@@ -694,18 +733,413 @@ const handleSubmit = async () => {
   padding-top: 16px;
 }
 
-/* Natural repair mode styles */
+/* Guided repair mode styles */
 .switch-section { margin-bottom: 16px; }
 .mode-switch { display: flex; gap: 0; border: 1px solid var(--mc-hairline); border-radius: var(--mc-radius-md); overflow: hidden; }
 .mode-btn { flex: 1; padding: 10px 16px; border: none; background: var(--mc-white); font-size: 14px; cursor: pointer; transition: all 0.2s; color: var(--mc-muted); }
 .mode-btn.active { background: var(--mc-ink); color: var(--mc-on-dark); font-weight: 600; }
 .mode-btn:not(.active):hover { background: var(--mc-canvas); }
-.natural-actions { margin-top: 8px; }
-.nl-result-card { margin-top: 12px; padding: 16px; border-radius: var(--mc-radius-md); border: 1px solid var(--mc-success); background: var(--mc-canvas); animation: ai-fade-in 0.3s ease; }
-.nl-result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.nl-label { font-size: 12px; color: var(--mc-muted); display: block; }
-.nl-value { font-size: 14px; font-weight: 600; color: var(--mc-ink); }
-.nl-reason { margin-top: 10px; font-size: 13px; color: var(--mc-muted); padding-top: 10px; border-top: 1px solid var(--mc-hairline-soft); }
+
+.assistant-section {
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--mc-lifted) 0%, var(--mc-white) 100%);
+  border: 1px solid var(--mc-hairline);
+  overflow: hidden;
+}
+
+.assistant-shell {
+  padding: 20px;
+}
+
+.assistant-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.assistant-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--mc-signal);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assistant-topbar h4 {
+  margin: 0;
+  color: var(--mc-ink);
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.assistant-reset {
+  border: 1px solid var(--mc-hairline);
+  border-radius: var(--mc-radius-sm);
+  background: var(--mc-white);
+  color: var(--mc-muted);
+  font-size: 13px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all var(--mc-transition);
+}
+
+.assistant-reset:hover {
+  color: var(--mc-ink);
+  border-color: var(--mc-ink);
+}
+
+.assistant-progress {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 6px 0 2px;
+}
+
+.assistant-progress-line {
+  position: absolute;
+  top: 15px;
+  left: 8px;
+  right: 8px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--mc-ink) var(--progress), var(--mc-hairline) var(--progress));
+}
+
+.assistant-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--mc-muted-soft);
+  font-size: 12px;
+  text-align: center;
+}
+
+.assistant-step.is-current,
+.assistant-step.is-done {
+  color: var(--mc-ink);
+}
+
+.step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--mc-hairline);
+  background: var(--mc-white);
+}
+
+.assistant-step.is-current .step-dot,
+.assistant-step.is-done .step-dot {
+  background: var(--mc-ink);
+  border-color: var(--mc-ink);
+}
+
+.assistant-workspace {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.38fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.assistant-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.side-block {
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--mc-canvas);
+  border: 1px solid var(--mc-hairline-soft);
+}
+
+.side-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--mc-muted);
+  font-weight: 600;
+}
+
+.location-block strong {
+  display: block;
+  color: var(--mc-ink);
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.collected-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.collected-item {
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: var(--mc-white);
+  border: 1px solid var(--mc-hairline-soft);
+}
+
+.collected-item span {
+  display: block;
+  color: var(--mc-muted);
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.collected-item strong {
+  display: block;
+  color: var(--mc-muted-soft);
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
+.collected-item.complete strong {
+  color: var(--mc-ink);
+}
+
+.assistant-dialog {
+  min-width: 0;
+  border-radius: 18px;
+  border: 1px solid var(--mc-hairline);
+  background: var(--mc-white);
+  box-shadow: 0 18px 40px rgba(20, 20, 19, 0.08);
+  overflow: hidden;
+}
+
+.assistant-dialog-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--mc-hairline-soft);
+  background: var(--mc-canvas);
+}
+
+.dialog-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--mc-signal);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assistant-dialog-header h5 {
+  margin: 0;
+  color: var(--mc-ink);
+  font-size: 18px;
+}
+
+.assistant-dialog-header p {
+  margin: 5px 0 0;
+  color: var(--mc-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.assistant-chat-window {
+  min-height: 230px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(243, 240, 238, 0.7) 0%, rgba(255, 255, 255, 0.7) 100%);
+}
+
+.assistant-message {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.assistant-message.is-student {
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--mc-ink);
+  color: var(--mc-white);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assistant-message.is-student .message-avatar {
+  background: var(--mc-signal);
+}
+
+.message-bubble {
+  max-width: min(620px, 82%);
+  padding: 11px 13px;
+  border-radius: 14px;
+  background: var(--mc-white);
+  border: 1px solid var(--mc-hairline);
+  color: var(--mc-ink);
+  box-shadow: 0 8px 18px rgba(20, 20, 19, 0.05);
+}
+
+.assistant-message.is-student .message-bubble {
+  background: var(--mc-signal);
+  color: var(--mc-white);
+  border-color: var(--mc-signal);
+}
+
+.assistant-message.is-student .message-bubble span,
+.assistant-message.is-student .message-bubble p {
+  color: var(--mc-white);
+}
+
+.message-role {
+  display: block;
+  font-size: 12px;
+  opacity: 0.72;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.message-bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.assistant-choice-panel {
+  padding: 14px 18px 4px;
+  border-top: 1px solid var(--mc-hairline-soft);
+}
+
+.choice-heading {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--mc-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.assistant-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.assistant-option {
+  min-height: 54px;
+  border: 1px solid var(--mc-hairline);
+  background: var(--mc-white);
+  color: var(--mc-ink);
+  border-radius: 12px;
+  padding: 9px 11px;
+  text-align: left;
+  cursor: pointer;
+  transition: transform var(--mc-transition), border-color var(--mc-transition), background var(--mc-transition);
+}
+
+.assistant-option:hover {
+  border-color: var(--mc-ink);
+  background: var(--mc-canvas);
+  transform: translateY(-1px);
+}
+
+.assistant-option:disabled {
+  opacity: 0.56;
+  cursor: wait;
+  transform: none;
+}
+
+.assistant-option span {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.assistant-option small {
+  display: block;
+  margin-top: 3px;
+  color: var(--mc-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.assistant-input-group {
+  display: grid;
+  grid-template-columns: 1fr 84px;
+  gap: 10px;
+  align-items: stretch;
+  padding: 14px 18px 18px;
+}
+
+.assistant-textarea,
+.summary-textarea {
+  width: 100%;
+  border-radius: 14px;
+  resize: vertical;
+}
+
+.assistant-textarea {
+  min-height: 54px;
+}
+
+.assistant-send {
+  border: 1.5px solid var(--mc-ink);
+  border-radius: 16px;
+  background: var(--mc-ink);
+  color: var(--mc-on-dark);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.assistant-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.assistant-dialog > .ai-error {
+  margin: 0 18px 12px;
+}
+
+.assistant-review-card {
+  margin: 0 18px 18px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(207, 69, 0, 0.22);
+  background: #fffaf6;
+  animation: ai-fade-in 0.3s ease;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.review-title {
+  font-weight: 600;
+  color: var(--mc-ink);
+}
+
+.review-note {
+  font-size: 12px;
+  color: var(--mc-muted);
+}
+
+.result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 14px;
+}
 </style>
 
 

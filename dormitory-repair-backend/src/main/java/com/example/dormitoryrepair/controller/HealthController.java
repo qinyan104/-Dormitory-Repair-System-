@@ -48,7 +48,7 @@ public class HealthController {
         Map<String, Object> redis = new LinkedHashMap<>();
         try {
             String pong = stringRedisTemplate.getConnectionFactory().getConnection().ping();
-            redis.put("status", "UP".equals(pong) ? "UP" : "DEGRADED");
+            redis.put("status", isRedisHealthy(pong) ? "UP" : "DEGRADED");
         } catch (Exception e) {
             redis.put("status", "DOWN");
             redis.put("error", e.getMessage());
@@ -86,7 +86,7 @@ public class HealthController {
 
         try {
             String pong = stringRedisTemplate.getConnectionFactory().getConnection().ping();
-            redisUp = "UP".equals(pong);
+            redisUp = isRedisHealthy(pong);
         } catch (Exception e) {
             redisUp = false;
         }
@@ -95,5 +95,9 @@ public class HealthController {
         info.put("redis", redisUp ? "UP" : "DOWN");
         info.put("status", dbUp && redisUp ? "UP" : "DOWN");
         return ApiResponse.success(info);
+    }
+
+    private boolean isRedisHealthy(String pong) {
+        return "PONG".equalsIgnoreCase(pong) || "UP".equalsIgnoreCase(pong);
     }
 }

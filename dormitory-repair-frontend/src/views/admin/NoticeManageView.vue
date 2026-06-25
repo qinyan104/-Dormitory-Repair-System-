@@ -19,7 +19,7 @@ const notices = ref<any[]>([])
 const total = ref(0)
 
 const query = ref({
-  keyword: '',
+  title: '',
   pageNum: 1,
   pageSize: 10
 })
@@ -127,7 +127,7 @@ onMounted(() => {
     <UiCard padding="20px" class="filter-card">
       <div class="filter-flex">
         <UiInput
-          v-model="query.keyword"
+          v-model="query.title"
           placeholder="搜索公告标题..."
           class="search-input"
           @keyup.enter="fetchData"
@@ -154,8 +154,10 @@ onMounted(() => {
             <tr v-for="item in notices" :key="item.id">
               <td>{{ item.id }}</td>
               <td class="title-cell">
-                <span v-if="item.isTop" class="top-tag">置顶</span>
-                <span class="title-text">{{ item.title }}</span>
+                <div class="title-content">
+                  <span v-if="item.isTop" class="top-tag">置顶</span>
+                  <span class="title-text">{{ item.title }}</span>
+                </div>
               </td>
               <td>
                 <span class="type-badge">{{ item.type === 'IMPORTANT' ? '重要' : '普通' }}</span>
@@ -291,9 +293,14 @@ onMounted(() => {
 }
 
 .title-cell {
+  vertical-align: middle;
+}
+
+.title-content {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-height: 24px;
 }
 
 .top-tag {

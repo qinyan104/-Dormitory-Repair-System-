@@ -145,7 +145,7 @@
   <g class="node">
     <rect x="672" y="246" width="240" height="64" rx="6" fill="#F3F0EE" stroke="#D1CDC7" stroke-width="1"/>
     <text class="node-name" x="792" y="272" fill="#141413" text-anchor="middle">待接单工作流</text>
-    <text class="sublabel" x="792" y="290" fill="#696969" text-anchor="middle">工单池列表 / 抢单承接</text>
+    <text class="sublabel" x="792" y="290" fill="#696969" text-anchor="middle">指派工单列表 / 确认接单</text>
   </g>
 
   <!-- Leaf 3.2 -->
@@ -208,8 +208,8 @@
   <!-- Leaf 4.5 -->
   <g class="node">
     <rect x="976" y="662" width="240" height="64" rx="6" fill="#F3F0EE" stroke="#D1CDC7" stroke-width="1"/>
-    <text class="node-name" x="1096" y="688" fill="#141413" text-anchor="middle">统计分析大屏</text>
-    <text class="sublabel" x="1096" y="706" fill="#696969" text-anchor="middle">大屏看板 / POI Excel 导出</text>
+    <text class="node-name" x="1096" y="688" fill="#141413" text-anchor="middle">数据统计看板</text>
+    <text class="sublabel" x="1096" y="706" fill="#696969" text-anchor="middle">统计看板 / POI Excel 导出</text>
   </g>
 
 </svg>

@@ -47,9 +47,7 @@ public class NoticeController {
                 .like(request.getTitle() != null && !request.getTitle().isBlank(), Notice::getTitle, request.getTitle())
                 .eq(request.getType() != null && !request.getType().isBlank(), Notice::getType, request.getType())
                 .eq(request.getStatus() != null, Notice::getStatus, request.getStatus())
-                .orderByDesc(Notice::getIsTop)
-                .orderByDesc(Notice::getPublishTime)
-                .orderByDesc(Notice::getCreateTime);
+                .orderByDesc(Notice::getId);
         IPage<Notice> result = noticeService.page(
                 new Page<>(request.getPageNum(), request.getPageSize()), wrapper);
         Map<String, Object> data = new HashMap<>();

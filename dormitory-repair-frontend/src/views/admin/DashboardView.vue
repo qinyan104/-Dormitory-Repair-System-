@@ -35,9 +35,9 @@ const fetchDashboardData = async () => {
       getRepairListApi({ pageNum: 1, pageSize: 8 })
     ])
 
-    if (summaryResult.status === 'fulfilled') summary.value = summaryResult.value.data
-    if (categoryResult.status === 'fulfilled') categories.value = categoryResult.value.data
-    if (repairResult.status === 'fulfilled') recentRepairs.value = getPageRecords(repairResult.value.data)
+    if (summaryResult.status === 'fulfilled') summary.value = summaryResult.value as unknown as typeof summary.value
+    if (categoryResult.status === 'fulfilled') categories.value = categoryResult.value as unknown as any[]
+    if (repairResult.status === 'fulfilled') recentRepairs.value = getPageRecords(repairResult.value as unknown)
 
     // 如果有任何请求失败，显示提示
     const failedResults = [summaryResult, categoryResult, repairResult].filter(r => r.status === 'rejected')

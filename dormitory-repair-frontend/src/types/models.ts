@@ -70,12 +70,32 @@ export interface UserProfileUpdateRequest {
 }
 
 export interface UserQueryParams {
+  username?: string
   pageNum?: number
   pageSize?: number
   realName?: string
   studentNo?: string
   status?: UserStatus
   role?: UserRole
+}
+
+export interface UserCreateRequest {
+  username: string
+  password: string
+  realName: string
+  studentNo?: string
+  phone?: string
+  gender?: number
+  dormitoryBuilding?: string
+  roomNo?: string
+  role: UserRole
+  skillType?: string
+  serviceArea?: string
+}
+
+export interface UserRepairerProfileRequest {
+  skillType?: string
+  serviceArea?: string
 }
 
 export interface PageResult<T> {
@@ -269,6 +289,39 @@ export interface NaturalRepairResponse {
   priorityScore: number
   reason: string
   confidence: number
+}
+
+export interface RepairChatChoice {
+  label: string
+  value?: string
+  action: 'detail' | 'impact' | 'extra' | 'finalize'
+  hint?: string
+}
+
+export interface RepairChatRequest {
+  message: string
+  phase: string
+  dormitoryBuilding?: string
+  roomNo?: string
+  problem?: string
+  issueType?: string
+  issueDetail?: string
+  impact?: string
+  extra?: string
+}
+
+export interface RepairChatResponse {
+  repairIntent: boolean
+  readyToSummarize: boolean
+  reply: string
+  issueType?: string
+  issueName?: string
+  issueDetail?: string
+  impact?: string
+  extra?: string
+  summary?: string
+  confidence?: number
+  choices?: RepairChatChoice[]
 }
 
 export interface InsightRequest {

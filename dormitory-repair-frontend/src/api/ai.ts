@@ -3,7 +3,9 @@ import type {
   AiClassifyRequest, AiClassifyResponse,
   AiRecommendResponse, EvaluationResponse,
   InsightRequest, InsightResponse,
-  NaturalRepairResponse
+  NaturalRepairResponse,
+  RepairChatRequest,
+  RepairChatResponse
 } from '../types/models'
 
 export const aiClassifyApi = (data: AiClassifyRequest) => {
@@ -24,4 +26,8 @@ export const aiInsightsApi = (data: InsightRequest) => {
 
 export const aiNaturalRepairApi = (text: string) => {
   return http.post<NaturalRepairResponse, NaturalRepairResponse>('/ai/natural-repair', { text })
+}
+
+export const aiRepairChatApi = (data: RepairChatRequest) => {
+  return http.post<RepairChatResponse, RepairChatResponse>('/ai/repair-chat', data)
 }

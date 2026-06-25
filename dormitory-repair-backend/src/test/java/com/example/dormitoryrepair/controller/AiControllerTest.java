@@ -9,6 +9,8 @@ import com.example.dormitoryrepair.dto.ai.EvaluationResponse;
 import com.example.dormitoryrepair.dto.ai.InsightRequest;
 import com.example.dormitoryrepair.dto.ai.InsightResponse;
 import com.example.dormitoryrepair.dto.ai.RecommendResponse;
+import com.example.dormitoryrepair.dto.ai.RepairChatRequest;
+import com.example.dormitoryrepair.dto.ai.RepairChatResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import com.example.dormitoryrepair.service.AiService;
@@ -78,6 +80,30 @@ class AiControllerTest {
     }
 
     @Test
+    void repairChat_ReturnsResponseForStudent() {
+        RepairChatResponse mockResp = new RepairChatResponse();
+        mockResp.setRepairIntent(true);
+        mockResp.setReply("请选择空调的具体现象");
+        RepairChatResponse.Choice choice = new RepairChatResponse.Choice();
+        choice.setLabel("不制冷");
+        choice.setValue("不制冷");
+        choice.setAction("detail");
+        mockResp.setChoices(java.util.List.of(choice));
+        when(aiService.repairChat(any(RepairChatRequest.class))).thenReturn(mockResp);
+
+        RepairChatRequest request = new RepairChatRequest();
+        request.setMessage("空调坏了");
+        request.setPhase("problem");
+
+        ApiResponse<RepairChatResponse> response = aiController.repairChat(request);
+
+        assertEquals(200, response.getCode());
+        assertNotNull(response.getData());
+        assertTrue(response.getData().getRepairIntent());
+        assertEquals("不制冷", response.getData().getChoices().get(0).getLabel());
+    }
+
+    @Test
     void recommendWorker_ReturnsResponse() {
         AuthContext.setRole("ADMIN");
         RecommendResponse mockResp = new RecommendResponse();
@@ -119,6 +145,18 @@ class AiControllerTest {
         request.setDescription("test");
 
         assertThrows(BusinessException.class, () -> aiController.classify(request));
+        verifyNoInteractions(aiService);
+    }
+
+    @Test
+    void repairChat_RejectsRepairer() {
+        AuthContext.setRole("REPAIRER");
+
+        RepairChatRequest request = new RepairChatRequest();
+        request.setMessage("空调坏了");
+        request.setPhase("problem");
+
+        assertThrows(BusinessException.class, () -> aiController.repairChat(request));
         verifyNoInteractions(aiService);
     }
 

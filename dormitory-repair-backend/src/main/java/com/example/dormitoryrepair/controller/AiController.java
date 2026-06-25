@@ -12,6 +12,8 @@ import com.example.dormitoryrepair.dto.ai.InsightResponse;
 import com.example.dormitoryrepair.dto.ai.NaturalRepairRequest;
 import com.example.dormitoryrepair.dto.ai.NaturalRepairResponse;
 import com.example.dormitoryrepair.dto.ai.RecommendResponse;
+import com.example.dormitoryrepair.dto.ai.RepairChatRequest;
+import com.example.dormitoryrepair.dto.ai.RepairChatResponse;
 import com.example.dormitoryrepair.service.AiService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +58,13 @@ public class AiController {
     public ApiResponse<NaturalRepairResponse> naturalRepair(@Valid @RequestBody NaturalRepairRequest request) {
         ensureStudentOrAdmin();
         NaturalRepairResponse result = aiService.naturalRepair(request.getText());
+        return ApiResponse.success(result);
+    }
+
+    @PostMapping("/repair-chat")
+    public ApiResponse<RepairChatResponse> repairChat(@Valid @RequestBody RepairChatRequest request) {
+        ensureStudentOrAdmin();
+        RepairChatResponse result = aiService.repairChat(request);
         return ApiResponse.success(result);
     }
 

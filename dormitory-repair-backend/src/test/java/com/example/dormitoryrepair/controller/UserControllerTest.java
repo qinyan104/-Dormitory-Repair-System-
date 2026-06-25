@@ -1,6 +1,8 @@
 package com.example.dormitoryrepair.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.MybatisConfiguration;
+import com.baomidou.mybatisplus.core.metadata.TableInfoHelper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.dormitoryrepair.common.auth.AuthContext;
 import com.example.dormitoryrepair.common.exception.BusinessException;
@@ -8,6 +10,7 @@ import com.example.dormitoryrepair.common.result.ApiResponse;
 import com.example.dormitoryrepair.common.result.ResultCode;
 import com.example.dormitoryrepair.dto.user.ChangePasswordRequest;
 import com.example.dormitoryrepair.dto.user.UserCreateRequest;
+import com.example.dormitoryrepair.dto.user.UserRepairerProfileRequest;
 import com.example.dormitoryrepair.dto.user.UserProfileUpdateRequest;
 import com.example.dormitoryrepair.dto.user.UserQueryRequest;
 import com.example.dormitoryrepair.dto.user.UserStatusUpdateRequest;
@@ -20,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.apache.ibatis.builder.MapperBuilderAssistant;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Map;
@@ -178,6 +182,24 @@ class UserControllerTest {
         assertEquals(1L, data.get("total"));
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    void pageOrdersUsersByIdDesc() {
+        AuthContext.setUserId(1L);
+        AuthContext.setRole("ADMIN");
+        Page<SysUser> page = new Page<>(1, 10);
+        page.setRecords(java.util.List.of());
+        page.setTotal(0);
+        when(sysUserService.page(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(page);
+
+        controller.page(new UserQueryRequest());
+
+        ArgumentCaptor<LambdaQueryWrapper<SysUser>> captor = ArgumentCaptor.forClass(LambdaQueryWrapper.class);
+        verify(sysUserService).page(any(Page.class), captor.capture());
+        TableInfoHelper.initTableInfo(new MapperBuilderAssistant(new MybatisConfiguration(), ""), SysUser.class);
+        assertTrue(captor.getValue().getSqlSegment().toLowerCase().contains("id desc"));
+    }
+
     @Test
     void pageRejectsNonAdmin() {
         AuthContext.setRole("STUDENT");
@@ -199,6 +221,24 @@ class UserControllerTest {
         Map<String, Object> data = controller.detail(2L).getData();
 
         assertEquals("student01", data.get("username"));
+    }
+
+    @Test
+    void detailReturnsRepairerSkillAndServiceAreaForAdmin() {
+        AuthContext.setUserId(1L);
+        AuthContext.setRole("ADMIN");
+        SysUser user = new SysUser();
+        user.setId(3L);
+        user.setUsername("repairer01");
+        user.setRole("REPAIRER");
+        user.setSkillType("空调维修,水电维修");
+        user.setServiceArea("14号楼,15号楼");
+        when(sysUserService.getById(3L)).thenReturn(user);
+
+        Map<String, Object> data = controller.detail(3L).getData();
+
+        assertEquals("空调维修,水电维修", data.get("skillType"));
+        assertEquals("14号楼,15号楼", data.get("serviceArea"));
     }
 
     @Test
@@ -270,6 +310,45 @@ class UserControllerTest {
         AuthContext.setRole("STUDENT");
 
         assertThrows(BusinessException.class, () -> controller.save(new UserCreateRequest()));
+    }
+
+    // ==================== updateRepairerProfile ====================
+
+    @Test
+    void updateRepairerProfileSuccess() {
+        AuthContext.setUserId(1L);
+        AuthContext.setRole("ADMIN");
+        SysUser target = new SysUser();
+        target.setId(2L);
+        target.setRole("REPAIRER");
+        when(sysUserService.getById(2L)).thenReturn(target);
+
+        UserRepairerProfileRequest request = new UserRepairerProfileRequest();
+        request.setSkillType("空调维修,水电维修");
+        request.setServiceArea("14号楼,15号楼");
+
+        controller.updateRepairerProfile(2L, request);
+
+        ArgumentCaptor<SysUser> captor = ArgumentCaptor.forClass(SysUser.class);
+        verify(sysUserService).updateById(captor.capture());
+        assertEquals("空调维修,水电维修", captor.getValue().getSkillType());
+        assertEquals("14号楼,15号楼", captor.getValue().getServiceArea());
+    }
+
+    @Test
+    void updateRepairerProfileRejectsNonRepairer() {
+        AuthContext.setUserId(1L);
+        AuthContext.setRole("ADMIN");
+        SysUser target = new SysUser();
+        target.setId(2L);
+        target.setRole("STUDENT");
+        when(sysUserService.getById(2L)).thenReturn(target);
+
+        UserRepairerProfileRequest request = new UserRepairerProfileRequest();
+        request.setSkillType("水电维修");
+        request.setServiceArea("14号楼");
+
+        assertThrows(BusinessException.class, () -> controller.updateRepairerProfile(2L, request));
     }
 
     // ==================== updateStatus ====================
